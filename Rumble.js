@@ -54,12 +54,13 @@ loop = function() {
 		env.grounded = 0;
 		env.jc = 0;
 		env.jc2 = 0;
-		env.yvel -= 20;
+		env.yvel -= 15;
 		env.njumps += 1;
 		}
 		else if (env.njumps == 1 && env.jc2 >= 1){
+		env.yvel *= -1;
 		env.jc = 0;
-		env.yvel -= 17;
+		env.yvel -= 13;
 		env.njumps += 1;
 		}
 	}
@@ -72,11 +73,11 @@ loop = function() {
 	}
 	
 	if (keypress.left){
-		env.xvel -= 0.4
+		env.xvel -= 0.25
 	}
 	
 	if (keypress.right){
-		env.xvel += 0.4
+		env.xvel += 0.25
 	}
 	
 
