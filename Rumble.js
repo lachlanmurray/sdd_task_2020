@@ -1,10 +1,12 @@
-var context, keypress, env, loop;
+var context, keypress, env, loop, stage, collisiondetection, controller, physics, render;
 
-context = document.querySelector("canvas").getContext("2d");
+context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
 context.canvas.height = 720;
 context.canvas.width = 1080;
+
+
 env = {
-	height:60,
+	height:60,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	njumps:0,
 	width:60,
 	x:540,
@@ -16,8 +18,14 @@ env = {
 	jc2:0,
 };
 
+
+stage = {
+	coords:[[100,450],[970,450],[800,600],[280,600]] // coords for drawing the stage
+};
+
+
 keypress = {
-	a:false,
+	a:false,	//boolean values for whether the keys are pressed
 	d:false,
 	w:false,
 	s:false,
@@ -44,12 +52,33 @@ keypress = {
 			break;
 			
 		}
-	}
+	} // toggling them true or false, based on whether the keyevent listener sees an event matching the controls
 };
 
-loop = function() {
+
+collisiondetection = function() {
+	if (env.y > context.canvas.height - env.height){
+		env.grounded = 1
+		env.njumps = 0;
+		env.y = context.canvas.height - env.height;
+		env.yvel = 0;
+		
+	} // is on ground
+	if (env.y > context.canvas.height - env.height && grounded == 0){
+		env.jc = 0
+	}	// reset jump cooldown (jc) to 0 when on ground
+	if (env.x < env.width*-1){
+		env.x = context.canvas.width;
+	}						  // if you go off the left, restart you at the right
+	else if (env.x > context.canvas.width){
+		env.x = env.width*-1
+	}				  // if you go off the right, restart you at the left.
+};
+
+
+controller = function() {
 	
-	if (keypress.jump && env.njumps < 2 && env.jc >= 1 || keypress.jump && env.grounded == 1 ) {
+	if (keypress.jump && env.njumps < 2 && env.jc >= 1 || keypress.jump && env.grounded == 1 ) {		// Checking if the player is on the ground and cooldown is finished to jump. **todo** streamline this if check
 		if (env.grounded == 1 && env.jc >= 7){
 		env.grounded = 0;
 		env.jc = 0;
@@ -57,66 +86,80 @@ loop = function() {
 		env.yvel -= 15;
 		env.njumps += 1;
 		}
-		else if (env.njumps == 1 && env.jc2 >= 1){
+		
+		else if (env.njumps == 1 && env.jc2 >= 1){														// checking the the player is in the air and that the aircooldown is finished
 		env.yvel *= -1;
 		env.jc = 0;
 		env.yvel -= 13;
 		env.njumps += 1;
 		}
 	}
-	if (env.grounded == 1){
+	
+	if (env.grounded == 1){ 																	// reset cooldown when you land
 		env.jc2 = 0;
 	}
 	
-	if (!keypress.jump){
+	if (!keypress.jump){																		// if they have release the jump key, set the flag for a second jump to true
 		env.jc2 = 1
 	}
 	
-	if (keypress.left){
+	if (keypress.left){																			// add velocity to the left when you press left
 		env.xvel -= 0.25
 	}
 	
-	if (keypress.right){
+	if (keypress.right){																		//add velocity to the right when you press right
 		env.xvel += 0.25
 	}
-	
-
-	env.x += env.xvel;
-	env.yvel +=0.5;
-	env.y += env.yvel;
-	env.xvel *= 0.95
-	env.yvel *= 0.95
-	
-	if (env.y > context.canvas.height - env.height){
-		env.grounded = 1
-		env.njumps = 0;
-		env.y = context.canvas.height - env.height;
-		env.yvel = 0;
-		
-	}
-	if (env.y > context.canvas.height - env.height && grounded == 0){
-		env.jc = 0
-	}
-	if (env.x < env.width*-1){
-		env.x = context.canvas.width;
-	}	
-	else if (env.x > context.canvas.width){
-		env.x = env.width*-1
-	}
-		
-
-	var img = document.getElementById("bg");
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.drawImage(img, 0, 0,1080,720);
-	context.fillStyle = "#ff0000";
-	context.beginPath();
-	context.rect(env.x,env.y,env.width,env.height);
-	context.fill();
-	window.requestAnimationFrame(loop);
-	env.jc += 0.1
-
 };
-	window.requestAnimationFrame(loop);
 
+
+physics = function() {
+	env.x += env.xvel;	//every frame, add the xvelocity to the xposition of the player
+	env.yvel +=0.5;		//every frame, apply 0.5 acceleration for gravity
+	env.y += env.yvel;	//every frame, add the yvelocity to the yposition of the player
+	env.xvel *= 0.95	//slow the player when running left to right, to cancel momentum
+	env.jc += 0.1		//add 0.1 to the jump cooldown
+}
+
+
+render = function() {
+	var img = document.getElementById("bg");				// get the background image
+	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas
+	context.drawImage(img, 0, 0,1080,720);					// draw background to the canvas
+	
+	context.fillStyle = "#ff0000";							// make it draw in red
+	context.beginPath();									// start drawing a new object
+	context.rect(env.x,env.y,env.width,env.height);			// use the descriptors in env (the player) to draw the object
+	context.fill();											// draw the object
+	
+	context.fillStyle = "#00ff00";							// make it draw in green
+	context.beginPath();									// start drawing new object
+	context.moveTo(stage.coords[0][0], stage.coords[0][1]);	// the next 4 use the coord set out in the 2d aray of the stage function 
+	context.lineTo(stage.coords[1][0], stage.coords[1][1]);
+	context.lineTo(stage.coords[2][0], stage.coords[2][1]);
+	context.lineTo(stage.coords[3][0], stage.coords[3][1]);
+	context.closePath();									// close the coords
+	context.stroke();										// add an outline to the path
+	context.fill();											// fill the path with green
+}
+
+
+loop = function() {
+	
+	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.a
+	
+	controller();
+	
+	physics();
+	
+	collisiondetection();
+	
+	render();
+	
+	window.requestAnimationFrame(loop); // recursively call this function
+};
+
+
+	window.requestAnimationFrame(loop); // call the loop function once
 	window.addEventListener("keydown",keypress.keyListener);
 	window.addEventListener("keyup",keypress.keyListener);
