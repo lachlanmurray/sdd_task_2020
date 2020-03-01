@@ -10,17 +10,23 @@ env = {
 	njumps:0,
 	width:60,
 	x:540,
-	y:360,
+	y:0,
 	xvel:0,
 	yvel:0,
 	jc:0.9,
 	grounded:0,
 	jc2:0,
+	
 };
 
 
 stage = {
-	coords:[[100,450],[970,450],[800,600],[280,600]] // coords for drawing the stage
+	coords:[[100,450],[970,450],[970,600],[100,600]], // coords for drawing the stage
+	width: 870,
+	height: 150,
+	ystart: 450,
+	xstart: 100,
+	xstop: 970
 };
 
 
@@ -58,28 +64,33 @@ keypress = {
 
 collisiondetection = function() {
 	if (env.y > context.canvas.height - env.height){
-		env.grounded = 1
-		env.njumps = 0;
-		env.y = context.canvas.height - env.height;
-		env.yvel = 0;
+		env.y = 100
+		env.x = 540
 		
 	} // is on ground
-	if (env.y > context.canvas.height - env.height && grounded == 0){
+	if (env.y > context.canvas.height - env.height && env.grounded == 0){
 		env.jc = 0
 	}	// reset jump cooldown (jc) to 0 when on ground
 	if (env.x < env.width*-1){
 		env.x = context.canvas.width;
-	}						  // if you go off the left, restart you at the right
+	}						  // if you go off the left, restart you at the right. to replace later
 	else if (env.x > context.canvas.width){
 		env.x = env.width*-1
-	}				  // if you go off the right, restart you at the left.
+	}				  // if you go off the right, restart you at the left. to replace later
+	if (env.y + env.height >= stage.ystart && env.x > stage.xstart - env.width && env.x < stage.xstop){
+		env.y = stage.ystart - env.height;
+		env.yvel -= 0.5;
+		env.grounded = 1;
+		env.njumps = 0;
+	}
 };
 
 
 controller = function() {
 	
-	if (keypress.jump && env.njumps < 2 && env.jc >= 1 || keypress.jump && env.grounded == 1 ) {		// Checking if the player is on the ground and cooldown is finished to jump. **todo** streamline this if check
+	if (keypress.jump && env.njumps < 8 && env.jc >= 1 || keypress.jump && env.grounded == 1 ) {		// Checking if the player is on the ground and cooldown is finished to jump. **todo** streamline this if check
 		if (env.grounded == 1 && env.jc >= 7){
+		env.yvel = 0;
 		env.grounded = 0;
 		env.jc = 0;
 		env.jc2 = 0;
@@ -87,8 +98,8 @@ controller = function() {
 		env.njumps += 1;
 		}
 		
-		else if (env.njumps == 1 && env.jc2 >= 1){														// checking the the player is in the air and that the aircooldown is finished
-		env.yvel *= -1;
+		else if (env.njumps >= 1 && env.jc2 >= 1){														// checking the the player is in the air and that the aircooldown is finished
+		env.yvel = 0;
 		env.jc = 0;
 		env.yvel -= 13;
 		env.njumps += 1;
@@ -115,7 +126,9 @@ controller = function() {
 
 physics = function() {
 	env.x += env.xvel;	//every frame, add the xvelocity to the xposition of the player
-	env.yvel +=0.5;		//every frame, apply 0.5 acceleration for gravity
+	if (env.grounded = 1){
+		env.yvel +=0.5;		//every frame, apply 0.5 acceleration for gravity
+	}
 	env.y += env.yvel;	//every frame, add the yvelocity to the yposition of the player
 	env.xvel *= 0.95	//slow the player when running left to right, to cancel momentum
 	env.jc += 0.1		//add 0.1 to the jump cooldown
@@ -147,14 +160,15 @@ render = function() {
 loop = function() {
 	
 	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.a
+	collisiondetection();
 	
 	controller();
+	
+	render();
 	
 	physics();
 	
 	collisiondetection();
-	
-	render();
 	
 	window.requestAnimationFrame(loop); // recursively call this function
 };
