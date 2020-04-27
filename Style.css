@@ -1,0 +1,50 @@
+@charset "utf-8";
+.canvaswrapper {
+    display: flex;
+	flex-direction: column;
+    border-width: thin;
+    border-style: none;
+}
+.gamewrapper {
+    float: left;
+    display: flex;
+    margin-left: -8px;
+}
+
+.Itemsheet {
+    width: 243px;
+    border-width: thin;
+    border-style: solid;
+    height: 1036px;
+    display: flex;
+    flex-direction: column;
+    margin-top: -1px;
+}
+
+.abilities {
+    border-width: thin;
+    border-style: solid;
+    height: 142px;
+    display: flex;
+    flex-direction: column;
+    padding-left: 6px;
+    padding-top: 14px;
+    margin-left: -8px;
+    width: 2542px;
+    margin-top: -2px;
+}
+
+
+.headbanner {
+    height: 88px;
+    border-width: thin;
+    border-style: solid;
+    margin-top: -8px;
+    margin-left: -8px;
+    width: 2546px;
+}
+
+
+.body {
+	background-color:darkslategray;
+}

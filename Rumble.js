@@ -1,32 +1,18 @@
-var context, keypress, env, loop, stage, collisiondetection, controller, physics, render;
-
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, Anims, World, room_load;
 context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
-context.canvas.height = 720;
-context.canvas.width = 1080;
+		context.canvas.height = window.innerHeight -302;
+		context.canvas.width = window.innerWidth -250;
 
 
 env = {
 	height:60,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
-	njumps:0,
 	width:60,
-	x:540,
-	y:0,
+	x:850,
+	y:700,
 	xvel:0,
 	yvel:0,
-	jc:0.9,
-	grounded:0,
-	jc2:0,
-	
-};
-
-
-stage = {
-	coords:[[100,450],[970,450],[970,600],[100,600]], // coords for drawing the stage
-	width: 870,
-	height: 150,
-	ystart: 450,
-	xstart: 100,
-	xstop: 970
+	curroom:40,
+	temproom:0
 };
 
 
@@ -53,8 +39,8 @@ keypress = {
 			case 68:// d key
 				keypress.right = keydown;
 			break;
-			case 32:// space key
-				keypress.jump = keydown;
+			case 16:// space key
+				keypress.dash = keydown;
 			break;
 			
 		}
@@ -62,105 +48,158 @@ keypress = {
 };
 
 
-collisiondetection = function() {
-	if (env.y > context.canvas.height - env.height){
-		env.y = 100
-		env.x = 540
-		
-	} // is on ground
-	if (env.y > context.canvas.height - env.height && env.grounded == 0){
-		env.jc = 0
-	}	// reset jump cooldown (jc) to 0 when on ground
-	if (env.x < env.width*-1){
-		env.x = context.canvas.width;
-	}						  // if you go off the left, restart you at the right. to replace later
-	else if (env.x > context.canvas.width){
-		env.x = env.width*-1
-	}				  // if you go off the right, restart you at the left. to replace later
-	if (env.y + env.height >= stage.ystart && env.x > stage.xstart - env.width && env.x < stage.xstop){
-		env.y = stage.ystart - env.height;
-		env.yvel -= 0.5;
-		env.grounded = 1;
-		env.njumps = 0;
-	}
-};
-
-
 controller = function() {
-	
-	if (keypress.jump && env.njumps < 8 && env.jc >= 1 || keypress.jump && env.grounded == 1 ) {		// Checking if the player is on the ground and cooldown is finished to jump. **todo** streamline this if check
-		if (env.grounded == 1 && env.jc >= 7){
-		env.yvel = 0;
-		env.grounded = 0;
-		env.jc = 0;
-		env.jc2 = 0;
-		env.yvel -= 15;
-		env.njumps += 1;
-		}
-		
-		else if (env.njumps >= 1 && env.jc2 >= 1){														// checking the the player is in the air and that the aircooldown is finished
-		env.yvel = 0;
-		env.jc = 0;
-		env.yvel -= 13;
-		env.njumps += 1;
-		}
+	env.dc += 1
+	if (keypress.up){ 																	
+		env.yvel -=0.25
 	}
-	
-	if (env.grounded == 1){ 																	// reset cooldown when you land
-		env.jc2 = 0;
+	if (env.yvel < -10){
+		env.yvel = -10
 	}
-	
-	if (!keypress.jump){																		// if they have release the jump key, set the flag for a second jump to true
-		env.jc2 = 1
+	if (keypress.down){																		
+		env.yvel +=0.25
 	}
-	
-	if (keypress.left){																			// add velocity to the left when you press left
+		if (env.yvel > 10){
+		env.yvel = 10
+	}
+	if (keypress.left){																			
 		env.xvel -= 0.25
 	}
-	
-	if (keypress.right){																		//add velocity to the right when you press right
+		if (env.xvel < -10){
+		env.xvel = -10
+	}
+	if (keypress.right){																		
 		env.xvel += 0.25
 	}
+		if (env.xvel > 10){
+		env.xvel = 10
+	}
+	
+if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 25){
+	env.xvel *= 0.97
+	env.yvel *= 0.97
+}
+
+	
+
+	
 };
 
 
 physics = function() {
 	env.x += env.xvel;	//every frame, add the xvelocity to the xposition of the player
-	if (env.grounded = 1){
-		env.yvel +=0.5;		//every frame, apply 0.5 acceleration for gravity
-	}
-	env.y += env.yvel;	//every frame, add the yvelocity to the yposition of the player
+	env.y += env.yvel
+	env.yvel *= 0.95
 	env.xvel *= 0.95	//slow the player when running left to right, to cancel momentum
-	env.jc += 0.1		//add 0.1 to the jump cooldown
+	if (Math.pow(env.xvel) < 1){
+		env.xvel = 0
+	}
+	if (Math.pow(env.yvel) < 1){
+		env.yvel = 0
+	}
+	//collision
+	if (env.y < 1){}
+	
+	if (env.y < 0 && env.x >1100 && env.x < 1200){
+		env.temproom = env.curroom-9
+		room_load.loadnew(env.curroom-9)
+		env.y = context.canvas.height - 2*env.height
+		console.log(room_load.doors)
+		env.curroom = env.curroom-9
+		
+
+	
+	}	else if (env.x < 0 && env.y >400 && env.y < 525){
+		env.temproom = env.curroom-1
+		room_load.loadnew(env.curroom-1)
+		env.x = context.canvas.width - 2*env.width
+		console.log(room_load.doors)
+		env.curroom = env.curroom-1
+		
+
+	
+	}	else if (env.y + env.height > context.canvas.height && env.x >1100 && env.x < 1200){
+		env.temproom = env.curroom+9
+		room_load.loadnew(env.curroom+9)
+		env.y = 2*env.height
+		console.log(room_load.doors)
+		env.curroom = env.curroom+9
+		
+
+	
+	}	else if (env.x + env.width > context.canvas.width && env.y >400 && env.y < 525){
+		env.temproom = env.curroom+1
+		room_load.loadnew(env.curroom+1)
+		env.x = 2*env.width
+		console.log(room_load.doors)
+		env.curroom = env.curroom+1
+		
+
+	}
+}
+
+
+Map = {
+	map: [0 ,2 ,2 ,2 ,2 ,1, 2, 2, 2, 2, 3,
+		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
+		  4 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 11,
+		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
+		  12,13,13,13,13,14,13,13,13,13,15,
+		 	],
+	col:4,
+	width:196,
+	height:196,
+	scalex:1,
+	scaley:1,
+	columns:11,
+	rows:5,
 }
 
 
 render = function() {
-	var img = document.getElementById("bg");				// get the background image
-	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas
-	context.drawImage(img, 0, 0,1080,720);					// draw background to the canvas
+
+	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
 	
+
+	img = document.getElementById("map").src;
+		for (let i = Map.map.length - 1; i > -1; --i){
+		
+		var val= Map.map[i];
+
+		var xs = (val % Map.col) * Map.width;
+		var ys = Math.floor(val/Map.col) * Map.height;
+		
+		var dx = (i % Map.columns) * Map.width + (context.canvas.width / 2 ) - ((Map.columns*Map.width) / 2 );
+		var dy = Math.floor(i / Map.columns) * Map.height + ((context.canvas.height / 2) - ((Map.rows*Map.height) / 2 ));
+		
+		var img = document.getElementById("map");
+		
+		
+		if (Map.scalex <= Map.scaley){
+			Map.scaley = Map.scalex
+		} else {
+			Map.scalex = Map.scaley
+		}
+		if (Map.scalex < 0.25){
+			Map.scalex = 0.25
+			Map.scaley = 0.25
+		}
+
+		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
+
+	}
+
 	context.fillStyle = "#ff0000";							// make it draw in red
 	context.beginPath();									// start drawing a new object
 	context.rect(env.x,env.y,env.width,env.height);			// use the descriptors in env (the player) to draw the object
-	context.fill();											// draw the object
-	
-	context.fillStyle = "#00ff00";							// make it draw in green
-	context.beginPath();									// start drawing new object
-	context.moveTo(stage.coords[0][0], stage.coords[0][1]);	// the next 4 use the coord set out in the 2d aray of the stage function 
-	context.lineTo(stage.coords[1][0], stage.coords[1][1]);
-	context.lineTo(stage.coords[2][0], stage.coords[2][1]);
-	context.lineTo(stage.coords[3][0], stage.coords[3][1]);
-	context.closePath();									// close the coords
-	context.stroke();										// add an outline to the path
-	context.fill();											// fill the path with green
+	context.fill();	
 }
 
 
 loop = function() {
-	
+
 	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.a
-	collisiondetection();
+	//collisiondetection();
 	
 	controller();
 	
@@ -168,12 +207,263 @@ loop = function() {
 	
 	physics();
 	
-	collisiondetection();
+	//collisiondetection();
 	
-	window.requestAnimationFrame(loop); // recursively call this function
+	setTimeout(window.requestAnimationFrame(loop), 1000/144); // recursively call this function
+	
 };
 
 
-	window.requestAnimationFrame(loop); // call the loop function once
+mouse = {
+	x:0,
+	y:0
+}
+
+
+windowsz = {
+	x:0,
+	y:0
+}
+
+
+room_load = {
+	doors:[0,0,0,0],
+	
+	foundroom:function(){
+		var roomid = World.rooms[env.temproom]
+		var output = [
+		  0 ,2 ,2 ,2 ,2 ,1, 2, 2, 2, 2, 3,
+		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
+		  4 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 11,
+		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
+		  12,13,13,13,13,14,13,13,13,13,15,
+		]
+		if(room_load.doors[0] == 0){
+			output[5] = 2
+		}
+		if(room_load.doors[1] == 0){
+			output[32] = 7
+		}
+		if(room_load.doors[2] == 0){
+			output[49] = 13
+		}
+		if(room_load.doors[3] == 0){
+			output[22] = 8
+		}
+		if(roomid == 2){
+			for (i=0;i<output.length;i++){
+				if(output[i] == 5){
+					output[i] = 6
+				}
+			}
+		}
+		console.log(room_load.doors)
+		Map.map = output
+	},
+	
+	loadnew:function(room) {
+	for (i=0;i<=3;i++){
+	room_load.doors[i] = 0
+	//console.log(typeof World.rooms[room-9])
+	}
+		console.log(room)
+	if (World.rooms[room+9] !=0 && typeof World.rooms[room+9] != "undefined" ){
+		room_load.doors[2] = 1
+	}
+	if (World.rooms[room+1] !=0 && typeof World.rooms[room+1] != "undefined" ){
+		room_load.doors[1] = 1
+	}
+	if (World.rooms[room-9] !=0 && typeof World.rooms[room-9] != "undefined" ){
+		room_load.doors[0] = 1
+	}
+	if (World.rooms[room-1] !=0 && typeof World.rooms[room-1] != "undefined" ){
+		room_load.doors[3] = 1
+	}
+	//console.log(World.rooms[env.curroom])
+	room_load.foundroom();
+},
+}
+
+
+
+Anims = function() {
+	
+}
+
+
+World = { // middle square method
+	gen:function(){
+		var n = (World.seed*World.seed).toString()
+		var digits = 4
+		while (n.length < digits*2){
+			n = "0" + n
+			
+		}
+		var start = (n.length/2) - 2;
+		var end = start+digits
+		World.seed = n.substring(start,end);
+		return n.substring(start,end);
+		
+		
+},
+	
+	printworld:function(){		var x = 0
+		var y = 9
+		console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9
+				console.log(World.rooms.slice(x,y))
+		x +=9
+		y +=9},
+	
+	branch:function(){
+		
+		var start = room_load
+		var o = World.gen().toString()
+		var via = Math.ceil((parseInt(o.substring(0,2)))/100*World.rooms.length)
+		//console.log(starty)
+		//console.log(startx)
+		var size = 2564
+		var startx = (env.curroom%9)
+		var starty = Math.floor(env.curroom/9) 
+		var cx = startx
+		var cy = starty
+		var previndex = 0
+		for (i=0;i<size;i++){
+			
+			var newx = 0
+			var newy = 0
+			var t = World.gen();
+			//console.log(t)
+			if (t < 5000){
+				if (t < 2500){
+					var d = 1
+				}else{
+					var d = 2
+				}
+			} else if(t > 7500){
+				var d = 4
+			}else{
+				var d = 3
+			}
+			//console.log(d)
+			//console.log(cy)
+			//console.log(cx)
+			switch(d){
+				case 1:
+					newx = cx
+					newy = cy+1
+					break;
+					
+				case 2:
+					newx = cx+1
+					newy = cy
+					break;
+					
+				case 3:
+					newx = cx-1
+					newy = cy
+					break;
+					
+				case 4:
+					newx = cx
+					newy = cy-1
+					break;
+				
+			}
+			var index = newy*9+newx 
+			cx = newx
+			cy = newy
+			//console.log(index)
+			//console.log(newy)
+			//console.log(newx)
+			if(i!=size-1 && index < World.rooms.length && index>0){
+				
+				World.rooms[index] = parseInt(World.gen())
+				previndex = index
+			//	console.log(previndex)
+			}else{
+				if (index > World.rooms.length || index < 0){
+					//console.log (previndex)
+					World.rooms[previndex] = 2
+					break
+				}else{
+					World.rooms[index] = 2
+				}
+			}
+			
+			
+		}
+		World.rooms[env.curroom] = 1
+		World.printworld()
+	},
+
+	seed:5466,
+	
+	rooms:[
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+		  ]
+}
+
+
+	if (window.screen.availWidth = 2560){	
+	windowsz.x = 1818
+	windowsz.y = 1297
+	}	
+	else if (window.screen.availWidth = 1920){
+	windowsz.x = 1364
+	windowsz.y = 973
+	
+	}
+	
+	World.branch()
+	
+	window.addEventListener("mousemove", function (e) {
+		mouse.x = e.clientX
+		mouse.y = e.clientY
+	} )
+	window.addEventListener("resize",function() {
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+		
+		Map.scalex = w/windowsz.x;
+		Map.scaley = h/windowsz.y;
+		if (window.innerheight = 1297){
+				context.canvas.height = window.innerHeight -302;
+		} else {
+		context.canvas.height = window.innerHeight -302;
+		}
+		context.canvas.width = window.innerWidth -250;
+	})
 	window.addEventListener("keydown",keypress.keyListener);
 	window.addEventListener("keyup",keypress.keyListener);
+	window.requestAnimationFrame(loop); // call the loop function once
