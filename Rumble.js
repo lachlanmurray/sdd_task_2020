@@ -12,7 +12,9 @@ env = {
 	xvel:0,
 	yvel:0,
 	curroom:40,
-	temproom:0
+	temproom:0,
+	adjust:0
+	
 };
 
 
@@ -106,6 +108,7 @@ physics = function() {
 		env.y = context.canvas.height - 2*env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom-9
+		anims.inanim=1
 	}
 	else if (env.x < 11 && env.y >400 && env.y < 525 && room_load.doors[3] == 1){
 		env.temproom = env.curroom-1
@@ -113,6 +116,7 @@ physics = function() {
 		env.x = context.canvas.width - 2*env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom-1
+		anims.inanim=1
 	}	
 	else if (env.y + env.height > context.canvas.height-11 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1){
 		env.temproom = env.curroom+9
@@ -120,6 +124,7 @@ physics = function() {
 		env.y = 2*env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom+9
+		anims.inanim=1
 	}	
 	else if (env.x + env.width > context.canvas.width-11 && env.y >400 && env.y < 525 && room_load.doors[1] == 1){
 		env.temproom = env.curroom+1
@@ -127,6 +132,7 @@ physics = function() {
 		env.x = 2*env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom+1
+		anims.inanim=1
 	}
 	
 	if (env.y <=10){
@@ -162,7 +168,9 @@ Map = {
 
 
 render = function() {
-	
+	if(anims.inanim ==1){
+		//console.log(anims.rendercheck)
+	}
 	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
 	
 
@@ -174,8 +182,8 @@ render = function() {
 		var xs = (val % Map.col) * Map.width;
 		var ys = Math.floor(val/Map.col) * Map.height;
 		
-		var dx = (i % Map.columns) * Map.width //+ (context.canvas.width / 2 ) - ((Map.columns*Map.width) / 2 );
-		var dy = Math.floor(i / Map.columns) * Map.height //+ ((context.canvas.height / 2) - ((Map.rows*Map.height) / 2 ));
+		var dx = (i % Map.columns) * Map.width 
+		var dy = Math.floor(i / Map.columns) * Map.height 
 		
 		var img = document.getElementById("map");
 		
@@ -191,9 +199,9 @@ render = function() {
 		}
 			
 
-		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
-
-	}
+		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex + env.adjust, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
+		}
+	
 
 	context.fillStyle = "#ff0000";							// make it draw in red
 	context.beginPath();									// start drawing a new object
@@ -231,7 +239,7 @@ windowsz = {
 
 room_load = {
 	doors:[0,0,0,0],
-	colxy:[],
+	next:[],
 	foundroom:function(){
 		var roomid = World.rooms[env.temproom]
 		var output = [
@@ -241,6 +249,7 @@ room_load = {
 		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
 		  12,13,13,13,13,14,13,13,13,13,15,
 		]
+		room_load.next = output
 		for(i=0;i<output.length;i++){
 		var co = output[i]
 		switch(co){
@@ -282,16 +291,18 @@ room_load = {
 				}
 			}
 		}
-		console.log(room_load.doors)
+		//console.log(room_load.doors)
 		Map.map = output
+		
 	},
+
 	
 	loadnew:function(room) {
 	for (i=0;i<=3;i++){
 	room_load.doors[i] = 0
 	//console.log(typeof World.rooms[room-9])
 	}
-		console.log(room)
+		//console.log(room)
 	if (World.rooms[room+9] !=0 && typeof World.rooms[room+9] != "undefined" ){
 		room_load.doors[2] = 1
 	}
@@ -304,10 +315,13 @@ room_load = {
 	if (World.rooms[room-1] !=0 && typeof World.rooms[room-1] != "undefined" ){
 		room_load.doors[3] = 1
 	}
+		console.log("what")
 	//console.log(World.rooms[env.curroom])
 	room_load.foundroom();
 	room_load.collisiongen();
-	console.log(room_load.walkable)
+	
+
+	//console.log(room_load.walkable)
 },
 	
 
@@ -335,7 +349,7 @@ room_load = {
 }
 
 
-Anims = function() {
+anims = {
 	
 }
 
@@ -358,7 +372,7 @@ World = { // middle square method
 	
 	printworld:function(){		var x = 0
 		var y = 9
-		console.log(World.rooms.slice(x,y))
+		//console.log(World.rooms.slice(x,y))
 		x +=9
 		y +=9
 				console.log(World.rooms.slice(x,y))
@@ -468,7 +482,7 @@ World = { // middle square method
 		World.printworld()
 	},
 
-	seed:6969,
+	seed:9943,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -496,6 +510,7 @@ World = { // middle square method
 	
 	World.branch()
 	room_load.loadnew(env.curroom)
+	//console.log(room_load.next)
 	window.addEventListener("mousemove", function (e) {
 		mouse.x = e.clientX
 		mouse.y = e.clientY
