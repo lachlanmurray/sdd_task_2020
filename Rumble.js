@@ -1,14 +1,14 @@
 var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, Anims, World, room_load;
 context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
-		context.canvas.height = window.innerHeight -302;
-		context.canvas.width = window.innerWidth -250;
+		context.canvas.height = window.innerHeight -320;
+		context.canvas.width = window.innerWidth -400;
 
 
 env = {
 	height:60,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	width:60,
-	x:850,
-	y:700,
+	x:400,
+	y:500,
 	xvel:0,
 	yvel:0,
 	curroom:40,
@@ -100,41 +100,46 @@ physics = function() {
 	//collision
 	if (env.y < 1){}
 	
-	if (env.y < 0 && env.x >1100 && env.x < 1200){
+	if (env.y < 11 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
 		env.y = context.canvas.height - 2*env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom-9
-		
-
-	
-	}	else if (env.x < 0 && env.y >400 && env.y < 525){
+	}
+	else if (env.x < 11 && env.y >400 && env.y < 525 && room_load.doors[3] == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
 		env.x = context.canvas.width - 2*env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom-1
-		
-
-	
-	}	else if (env.y + env.height > context.canvas.height && env.x >1100 && env.x < 1200){
+	}	
+	else if (env.y + env.height > context.canvas.height-11 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
 		env.y = 2*env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom+9
-		
-
-	
-	}	else if (env.x + env.width > context.canvas.width && env.y >400 && env.y < 525){
+	}	
+	else if (env.x + env.width > context.canvas.width-11 && env.y >400 && env.y < 525 && room_load.doors[1] == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
 		env.x = 2*env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom+1
-		
-
+	}
+	
+	if (env.y <=10){
+			env.y=10
+	}	
+	if (env.x <=10){
+		env.x = 10
+	}	
+	if (env.y + env.height >= context.canvas.height-10){
+		env.y = context.canvas.height - env.height -10
+	}	
+	if (env.x + env.width >= context.canvas.width-10){
+		env.x = context.canvas.width-env.width-10
 	}
 }
 
@@ -157,7 +162,7 @@ Map = {
 
 
 render = function() {
-
+	
 	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
 	
 
@@ -169,8 +174,8 @@ render = function() {
 		var xs = (val % Map.col) * Map.width;
 		var ys = Math.floor(val/Map.col) * Map.height;
 		
-		var dx = (i % Map.columns) * Map.width + (context.canvas.width / 2 ) - ((Map.columns*Map.width) / 2 );
-		var dy = Math.floor(i / Map.columns) * Map.height + ((context.canvas.height / 2) - ((Map.rows*Map.height) / 2 ));
+		var dx = (i % Map.columns) * Map.width //+ (context.canvas.width / 2 ) - ((Map.columns*Map.width) / 2 );
+		var dy = Math.floor(i / Map.columns) * Map.height //+ ((context.canvas.height / 2) - ((Map.rows*Map.height) / 2 ));
 		
 		var img = document.getElementById("map");
 		
@@ -184,6 +189,7 @@ render = function() {
 			Map.scalex = 0.25
 			Map.scaley = 0.25
 		}
+			
 
 		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
 
@@ -198,16 +204,13 @@ render = function() {
 
 loop = function() {
 
-	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.a
-	//collisiondetection();
+	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.
 	
 	controller();
 	
 	render();
 	
 	physics();
-	
-	//collisiondetection();
 	
 	setTimeout(window.requestAnimationFrame(loop), 1000/144); // recursively call this function
 	
@@ -228,7 +231,7 @@ windowsz = {
 
 room_load = {
 	doors:[0,0,0,0],
-	
+	colxy:[],
 	foundroom:function(){
 		var roomid = World.rooms[env.temproom]
 		var output = [
@@ -238,18 +241,40 @@ room_load = {
 		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
 		  12,13,13,13,13,14,13,13,13,13,15,
 		]
-		if(room_load.doors[0] == 0){
-			output[5] = 2
+		for(i=0;i<output.length;i++){
+		var co = output[i]
+		switch(co){
+			case 1:
+			if(room_load.doors[0] == 0){
+			output[i] = 2
+			}
+			break;
+			
+			case 4:
+			if(room_load.doors[3] == 0){
+				output[22] = 8
+			}
+			break;
+				
+			case 11:
+			if(room_load.doors[1] == 0){
+				output[i] = 7
+			}
+			break;
+				
+			case 14:
+			if(room_load.doors[2] == 0){
+				output[i] = 13
+			}	
+			break;
+				
+			default:
+				continue
+			break;
 		}
-		if(room_load.doors[1] == 0){
-			output[32] = 7
 		}
-		if(room_load.doors[2] == 0){
-			output[49] = 13
-		}
-		if(room_load.doors[3] == 0){
-			output[22] = 8
-		}
+		
+
 		if(roomid == 2){
 			for (i=0;i<output.length;i++){
 				if(output[i] == 5){
@@ -281,9 +306,33 @@ room_load = {
 	}
 	//console.log(World.rooms[env.curroom])
 	room_load.foundroom();
+	room_load.collisiongen();
+	console.log(room_load.walkable)
 },
-}
+	
 
+	
+	collisiongen:function(){
+		for(i=0;i<Map.map.length;i++){
+			switch(Map.map[i]){
+				case 2:
+
+				break;
+				
+				case 4:
+
+				break;
+					
+				case 5:
+
+				break;
+					
+				case 3:
+
+			}
+		}
+	}
+}
 
 
 Anims = function() {
@@ -419,7 +468,7 @@ World = { // middle square method
 		World.printworld()
 	},
 
-	seed:5466,
+	seed:6969,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -446,7 +495,7 @@ World = { // middle square method
 	}
 	
 	World.branch()
-	
+	room_load.loadnew(env.curroom)
 	window.addEventListener("mousemove", function (e) {
 		mouse.x = e.clientX
 		mouse.y = e.clientY
@@ -458,11 +507,11 @@ World = { // middle square method
 		Map.scalex = w/windowsz.x;
 		Map.scaley = h/windowsz.y;
 		if (window.innerheight = 1297){
-				context.canvas.height = window.innerHeight -302;
+				context.canvas.height = window.innerHeight -320;
 		} else {
-		context.canvas.height = window.innerHeight -302;
+		context.canvas.height = window.innerHeight -320;
 		}
-		context.canvas.width = window.innerWidth -250;
+		context.canvas.width = window.innerWidth -400;
 	})
 	window.addEventListener("keydown",keypress.keyListener);
 	window.addEventListener("keyup",keypress.keyListener);

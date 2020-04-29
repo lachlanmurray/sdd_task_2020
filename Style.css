@@ -12,10 +12,10 @@
 }
 
 .Itemsheet {
-    width: 243px;
+    width: 384px;
     border-width: thin;
     border-style: solid;
-    height: 1036px;
+    height: 976px;
     display: flex;
     flex-direction: column;
     margin-top: -1px;
@@ -24,7 +24,7 @@
 .abilities {
     border-width: thin;
     border-style: solid;
-    height: 142px;
+    height: 212px;
     display: flex;
     flex-direction: column;
     padding-left: 6px;
