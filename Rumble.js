@@ -1,4 +1,4 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, Anims, World, room_load;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, Anims, World, room_load,gun, monstertypes;
 context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
 		context.canvas.height = window.innerHeight -320;
 		context.canvas.width = window.innerWidth -400;
@@ -13,7 +13,7 @@ env = {
 	yvel:0,
 	curroom:40,
 	temproom:0,
-	adjust:0
+	adjust:0,
 	
 };
 
@@ -53,33 +53,33 @@ keypress = {
 controller = function() {
 	env.dc += 1
 	if (keypress.up){ 																	
-		env.yvel -=0.25
+		env.yvel -=0.23
 	}
-	if (env.yvel < -10){
-		env.yvel = -10
+	if (env.yvel < -6){
+		env.yvel = -6
 	}
 	if (keypress.down){																		
-		env.yvel +=0.25
+		env.yvel +=0.23
 	}
-		if (env.yvel > 10){
-		env.yvel = 10
+		if (env.yvel > 6){
+		env.yvel = 6
 	}
 	if (keypress.left){																			
 		env.xvel -= 0.25
 	}
-		if (env.xvel < -10){
-		env.xvel = -10
+		if (env.xvel < -6){
+		env.xvel = -6
 	}
 	if (keypress.right){																		
 		env.xvel += 0.25
 	}
-		if (env.xvel > 10){
-		env.xvel = 10
+		if (env.xvel > 6){
+		env.xvel = 6
 	}
 	
 if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 25){
-	env.xvel *= 0.97
-	env.yvel *= 0.97
+	env.xvel *= 0.9
+	env.yvel *= 0.9
 }
 
 	
@@ -88,7 +88,7 @@ if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 25){
 };
 
 
-physics = function() {
+physics = function(){
 	env.x += env.xvel;	//every frame, add the xvelocity to the xposition of the player
 	env.y += env.yvel
 	env.yvel *= 0.95
@@ -102,34 +102,34 @@ physics = function() {
 	//collision
 	if (env.y < 1){}
 	
-	if (env.y < 11 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1){
+	if (env.y < 12 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
-		env.y = context.canvas.height - 2*env.height
+		env.y = context.canvas.height - env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom-9
 		anims.inanim=1
 	}
-	else if (env.x < 11 && env.y >400 && env.y < 525 && room_load.doors[3] == 1){
+	else if (env.x < 12 && env.y >400 && env.y < 525 && room_load.doors[3] == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
-		env.x = context.canvas.width - 2*env.width
+		env.x = context.canvas.width - env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom-1
 		anims.inanim=1
 	}	
-	else if (env.y + env.height > context.canvas.height-11 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1){
+	else if (env.y + env.height > context.canvas.height-12 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
-		env.y = 2*env.height
+		env.y = env.height
 		console.log(room_load.doors)
 		env.curroom = env.curroom+9
 		anims.inanim=1
 	}	
-	else if (env.x + env.width > context.canvas.width-11 && env.y >400 && env.y < 525 && room_load.doors[1] == 1){
+	else if (env.x + env.width > context.canvas.width-12 && env.y >400 && env.y < 525 && room_load.doors[1] == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
-		env.x = 2*env.width
+		env.x = env.width
 		console.log(room_load.doors)
 		env.curroom = env.curroom+1
 		anims.inanim=1
@@ -150,6 +150,30 @@ physics = function() {
 }
 
 
+gun = {
+	bullets:[],
+	velocity:10,
+	draw:function(){
+		for(i=0;i<gun.bullets.length;i++){
+			context.fillStyle = "#00ff00";							// make it draw in red
+			context.beginPath();									// start drawing a new object
+			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
+			gun.bullets[i].x += gun.bullets[i].xv
+			gun.bullets[i].y += gun.bullets[i].yv
+			context.fill();	
+			gun.collision();
+		}
+	},
+	collision:function(){
+			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x <20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
+				gun.bullets.splice(i,1)
+			}
+		
+	}
+	
+}
+
+
 Map = {
 	map: [0 ,2 ,2 ,2 ,2 ,1, 2, 2, 2, 2, 3,
 		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
@@ -157,6 +181,7 @@ Map = {
 		  8 ,5 ,5 ,5 ,5 ,5 ,5 ,5, 5, 5, 7,
 		  12,13,13,13,13,14,13,13,13,13,15,
 		 	],
+	Monsters:[],
 	col:4,
 	width:196,
 	height:196,
@@ -202,21 +227,24 @@ render = function() {
 		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex + env.adjust, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
 		}
 	
-
-	context.fillStyle = "#ff0000";							// make it draw in red
-	context.beginPath();									// start drawing a new object
-	context.rect(env.x,env.y,env.width,env.height);			// use the descriptors in env (the player) to draw the object
-	context.fill();	
+			context.fillStyle = "#00ff00";							// make it draw in red
+			context.beginPath();									// start drawing a new object
+			context.rect(env.x,env.y,env.width,env.height)
+			context.fill();
+	
+	
 }
 
 
 loop = function() {
 
-	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.
+	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.s	
 	
 	controller();
 	
 	render();
+	
+	gun.draw();
 	
 	physics();
 	
@@ -234,6 +262,34 @@ mouse = {
 windowsz = {
 	x:0,
 	y:0
+}
+
+
+monstertypes = {
+	stabby:{ 
+		health:4,
+		speed:2.5,
+		timer:72,
+		dmg:7
+	},
+	shooty:{
+		health:2,
+		speed:3,
+		timer:100,
+		dmg:10
+	},
+	speedy:{
+		health:3,
+		speed:5,
+		timer:20,
+		dmg:2
+	},
+	tanky:{
+		health:7,
+		speed:1,
+		timer:144,
+		dmg:17
+	},
 }
 
 
@@ -298,6 +354,8 @@ room_load = {
 
 	
 	loadnew:function(room) {
+	Map.Monsters = []
+	World.rooms[env.curroom] = 4
 	for (i=0;i<=3;i++){
 	room_load.doors[i] = 0
 	//console.log(typeof World.rooms[room-9])
@@ -315,8 +373,9 @@ room_load = {
 	if (World.rooms[room-1] !=0 && typeof World.rooms[room-1] != "undefined" ){
 		room_load.doors[3] = 1
 	}
-		console.log("what")
-	//console.log(World.rooms[env.curroom])
+	
+	
+	room_load.Monstergen();
 	room_load.foundroom();
 	room_load.collisiongen();
 	
@@ -324,7 +383,6 @@ room_load = {
 	//console.log(room_load.walkable)
 },
 	
-
 	
 	collisiongen:function(){
 		for(i=0;i<Map.map.length;i++){
@@ -345,6 +403,59 @@ room_load = {
 
 			}
 		}
+	},
+	
+	
+	Monstergen:function(){
+		var nmon = 0
+		var n = World.rooms[env.curroom]
+		if (n<1000){
+			nmon = 4
+		}else if (n >=1000 && n < 3500){
+			nmon = 3
+		}else if (n >= 3500 && n <8000){
+			nmon = 2
+		}else if (n >= 8000){
+			nmon = 1
+		}
+		
+		for (i=0;i < nmon ; i++){
+			var t = World.gen(); // something here is causing the thing to ojly spawn on enemy
+			console.log(i)
+			if (t<1000){
+					type = 4
+				//console.log("4")
+				} 
+			if (t >=1000 && t < 3500){
+					type = 3
+				//console.log("3")
+				}
+			if (t >= 3500 && t <8000){
+					type = 2
+				//console.log("2")
+				}
+			if (t >= 8000){
+					type = 1
+				//console.log("1")
+				}
+			var health =0
+			
+			if (type == 1){
+					health = monstertypes.stabby.health
+				}else if (type == 2){
+					health = monstertypes.shooty.health
+				}else if (type == 3){
+					health = monstertypes.speedy.health
+				}else if (type == 4){
+					health = monstertypes.tanky.health
+				}
+			
+			Map.Monsters.push({
+			type:type,
+			health:health
+		})
+		}
+		
 	}
 }
 
@@ -358,8 +469,8 @@ World = { // middle square method
 	gen:function(){
 		var n = (World.seed*World.seed).toString()
 		var digits = 4
-		while (n.length < digits*2){
-			n = "0" + n
+		for (i=n.length;i < digits*2;i++){
+			n = n.substring(i,i-2) + n
 			
 		}
 		var start = (n.length/2) - 2;
@@ -417,7 +528,7 @@ World = { // middle square method
 			
 			var newx = 0
 			var newy = 0
-			var t = World.gen();
+			var t = World.gen(); 	
 			//console.log(t)
 			if (t < 5000){
 				if (t < 2500){
@@ -498,6 +609,8 @@ World = { // middle square method
 }
 
 
+
+
 	if (window.screen.availWidth = 2560){	
 	windowsz.x = 1818
 	windowsz.y = 1297
@@ -510,11 +623,29 @@ World = { // middle square method
 	
 	World.branch()
 	room_load.loadnew(env.curroom)
-	//console.log(room_load.next)
+	var guy = new Image();	
+	guy.src = "guy.png";
+	window.addEventListener("click", function(){
+		var xdiff = mouse.x-env.x
+		var ydiff = mouse.y-env.y
+		var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
+		console.log(mouse.x, mouse.y)
+		var sf = gun.velocity/Length
+		
+				gun.bullets.push({
+					x:env.x,
+					y:env.y,
+					xv:xdiff*sf,
+					yv:ydiff*sf,
+					u:0
+				})
+	});
+
 	window.addEventListener("mousemove", function (e) {
-		mouse.x = e.clientX
-		mouse.y = e.clientY
-	} )
+		mouse.x = e.clientX-385
+		mouse.y = e.clientY-90
+	})
+
 	window.addEventListener("resize",function() {
 		var w = window.innerWidth;
 		var h = window.innerHeight;
