@@ -1,12 +1,13 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, Anims, World, room_load,gun, monstertypes;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision;
 context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
 		context.canvas.height = window.innerHeight -320;
 		context.canvas.width = window.innerWidth -400;
 
 
 env = {
-	height:60,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
-	width:60,
+	height:35,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
+	width:35,
+	radius:17.5,
 	x:400,
 	y:500,
 	xvel:0,
@@ -14,6 +15,7 @@ env = {
 	curroom:40,
 	temproom:0,
 	adjust:0,
+	hp:15
 	
 };
 
@@ -53,31 +55,31 @@ keypress = {
 controller = function() {
 	env.dc += 1
 	if (keypress.up){ 																	
-		env.yvel -=0.23
+		env.yvel -=0.15
 	}
-	if (env.yvel < -6){
-		env.yvel = -6
+		if (env.yvel < -3.5){
+		env.yvel = -3.5
 	}
 	if (keypress.down){																		
-		env.yvel +=0.23
+		env.yvel +=0.15
 	}
-		if (env.yvel > 6){
-		env.yvel = 6
+		if (env.yvel > 3.5){
+		env.yvel = 3.5
 	}
 	if (keypress.left){																			
-		env.xvel -= 0.25
+		env.xvel -= 0.15
 	}
-		if (env.xvel < -6){
-		env.xvel = -6
+		if (env.xvel < -3.5){
+		env.xvel = -3.5
 	}
 	if (keypress.right){																		
-		env.xvel += 0.25
+		env.xvel += 0.15
 	}
-		if (env.xvel > 6){
-		env.xvel = 6
+		if (env.xvel > 3.5){
+		env.xvel = 3.5
 	}
 	
-if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 25){
+if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 15){
 	env.xvel *= 0.9
 	env.yvel *= 0.9
 }
@@ -102,37 +104,33 @@ physics = function(){
 	//collision
 	if (env.y < 1){}
 	
-	if (env.y < 12 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1){
+	if (env.y < 12 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
 		env.y = context.canvas.height - env.height
-		console.log(room_load.doors)
 		env.curroom = env.curroom-9
-		anims.inanim=1
+		
 	}
-	else if (env.x < 12 && env.y >400 && env.y < 525 && room_load.doors[3] == 1){
+	else if (env.x < 12 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
 		env.x = context.canvas.width - env.width
-		console.log(room_load.doors)
 		env.curroom = env.curroom-1
-		anims.inanim=1
+	
 	}	
-	else if (env.y + env.height > context.canvas.height-12 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1){
+	else if (env.y + env.height > context.canvas.height-12 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
 		env.y = env.height
-		console.log(room_load.doors)
 		env.curroom = env.curroom+9
-		anims.inanim=1
+		
 	}	
-	else if (env.x + env.width > context.canvas.width-12 && env.y >400 && env.y < 525 && room_load.doors[1] == 1){
+	else if (env.x + env.width > context.canvas.width-12 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
 		env.x = env.width
-		console.log(room_load.doors)
 		env.curroom = env.curroom+1
-		anims.inanim=1
+		
 	}
 	
 	if (env.y <=10){
@@ -146,29 +144,87 @@ physics = function(){
 	}	
 	if (env.x + env.width >= context.canvas.width-10){
 		env.x = context.canvas.width-env.width-10
+	}	
+	
+	if (Map.Monsters.length == 0){
+		room_load.denable = 1
+	}
+	
+	if (env.hp <= 0){
+		alert("you have died")
+		env.hp = 5
+	}
+	gun.checkdmg();
+}
+
+
+collision = {
+	circle:function(r1,x1,y1,r2,x2,y2){
+
+		var dx = x1 - x2;
+		var dy = y1 - y2;
+		var distance = Math.sqrt(dx * dx + dy * dy);
+
+		if (distance < r1 + r2) {
+			return true;
+		}
+	},
+	rect:function(x1,y1,w1,h1,x2,y2,w2,h2){
+		if (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2) {
+    		return true;
+		}
 	}
 }
 
 
 gun = {
 	bullets:[],
-	velocity:10,
-	draw:function(){
-		for(i=0;i<gun.bullets.length;i++){
-			context.fillStyle = "#00ff00";							// make it draw in red
-			context.beginPath();									// start drawing a new object
-			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
-			gun.bullets[i].x += gun.bullets[i].xv
-			gun.bullets[i].y += gun.bullets[i].yv
-			context.fill();	
-			gun.collision();
-		}
-	},
+	velocity:5,
 	collision:function(){
 			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x <20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
 				gun.bullets.splice(i,1)
 			}
 		
+	},
+	checkdmg:function(){
+		for(i=0;i<gun.bullets.length;i++){
+			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
+				gun.bullets.splice(i,1)
+				env.hp -= 1
+			}
+		}
+		var rmb = []
+		var rmm = []
+		for(m=0;m<Map.Monsters.length;m++){
+			for(b=0;b<gun.bullets.length;b++){
+				
+				if(collision.circle(Map.Monsters[m].size*30,Map.Monsters[m].x,Map.Monsters[m].y,env.radius/3,gun.bullets[b].x,gun.bullets[b].y) && gun.bullets[b].u == 0){
+					Map.Monsters[m].health -= 1
+					rmb.push(b)
+					if(Map.Monsters[m].health <= 0){
+					rmm.push(m)
+					}
+				}
+			}
+		}
+		for(rb=0;rb<rmb.length;rb++){
+			gun.bullets.splice(rmb[rb],1)
+		}
+		for(rm=0;rm<rmm.length;rm++){
+			Map.Monsters.splice(rmm[rm],1)
+			try{
+			Map.Monsters[m].health += 1
+			alert("did it")
+			}
+			catch(err){
+				
+			}
+		}
+		for(i=0;i<gun.bullets.length;i++){
+			if(collision.circle(env.radius,env.x,env.y,env.radius/4,context.canvas.width/2,context.canvas.height/2) && gun.bullets[i].u == 2){
+				alert("you win")
+			}
+		}
 	}
 	
 }
@@ -188,19 +244,16 @@ Map = {
 	scalex:1,
 	scaley:1,
 	columns:11,
-	rows:5,
+	rows:5
 }
 
 
 render = function() {
-	if(anims.inanim ==1){
-		//console.log(anims.rendercheck)
-	}
 	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
 	
 
 	img = document.getElementById("map").src;
-		for (let i = Map.map.length - 1; i > -1; --i){
+		for (let i=Map.map.length - 1; i > -1; --i){
 		
 		var val= Map.map[i];
 
@@ -227,9 +280,98 @@ render = function() {
 		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex + env.adjust, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
 		}
 	
-			context.fillStyle = "#00ff00";							// make it draw in red
+	for(i=0;i<gun.bullets.length;i++){
+			context.fillStyle = "#0000ff";							// make it draw in red
 			context.beginPath();									// start drawing a new object
-			context.rect(env.x,env.y,env.width,env.height)
+			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
+			gun.bullets[i].x += gun.bullets[i].xv
+			gun.bullets[i].y += gun.bullets[i].yv
+			context.fill();	
+			gun.collision();
+		}
+	
+	for (f=0; f < Map.Monsters.length; f++){
+			Map.Monsters[f].timerc += 1
+			context.fillStyle = "#ff0000";							
+			context.beginPath();									
+			context.arc(Map.Monsters[f].x,Map.Monsters[f].y,Map.Monsters[f].size*30,0,Math.PI*2,true)			
+			context.fill();
+			var xd = (env.x+env.width/2)-Map.Monsters[f].x
+			var yd = (env.y+env.height/2)-Map.Monsters[f].y
+			var Length = Math.sqrt((xd*xd)+(yd*yd))
+			var ms = Map.Monsters[f].speed/Length
+			Map.Monsters[f].xv = xd*ms
+			Map.Monsters[f].yv = yd*ms
+			Map.Monsters[f].x += Map.Monsters[f].xv
+			Map.Monsters[f].y += Map.Monsters[f].yv
+		
+		
+		//Ranged monster attack if timer is done
+			if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
+				if(Map.Monsters[f].g != 0){
+				
+				Map.Monsters[f].x -= Map.Monsters[f].xv
+				Map.Monsters[f].y -= Map.Monsters[f].yv
+				var shootlist = []
+				for(n=0;n<Map.Monsters.length;n++){
+					if(Map.Monsters[n].g == 1){
+					shootlist.push(n)
+					}
+				}
+				for (g=0;g<shootlist.length;g++){
+				for (i=0;i<6;i++){
+					var xvmod = Math.sin(360-(45+g*3)*i)
+					var yvmod = Math.cos(360-(45+g*3)*i)
+					var xg = parseInt(Map.Monsters[shootlist[g]].x.toString())
+					var yg = parseInt(Map.Monsters[shootlist[g]].y.toString())
+					var xx = xvmod * 3
+					var yy = yvmod * 3
+					gun.bullets.push({
+						x:xg,
+						y:yg,
+						xv:xx,
+						yv:yy,
+						u:1
+					})
+				}
+				}
+					
+				}
+				Map.Monsters[f].timerc = 0
+				Map.Monsters[f].speed = 0
+			}else if(Map.Monsters[f].g !=0){
+							Map.Monsters[f].speed += 0.004
+			}
+			
+		
+		// monster self collision
+			var checklist = []
+			for (i=0;i<Map.Monsters.length;i++){
+				if(i != f){
+					checklist.push(i)
+				}
+			}
+			for(n=0;n<checklist.length;n++){
+				if(collision.circle(Map.Monsters[checklist[n]].size*30,Map.Monsters[checklist[n]].x,Map.Monsters[checklist[n]].y,Map.Monsters[f].size*30,Map.Monsters[f].x,Map.Monsters[f].y)){
+					if(Map.Monsters[checklist[n]].speed < Map.Monsters[f].speed){
+						Map.Monsters[f].x -= Map.Monsters[f].xv *0.1
+						Map.Monsters[f].y -= Map.Monsters[f].yv *0.1
+					}else if (Map.Monsters[checklist[n]].speed > Map.Monsters[f].speed){
+						Map.Monsters[f].x -= Map.Monsters[f].xv *0.5
+						Map.Monsters[f].y -= Map.Monsters[f].yv *0.5
+					}else{
+						Map.Monsters[f].x -= Map.Monsters[f].xv 
+						Map.Monsters[f].y -= Map.Monsters[f].yv 
+					}
+				}
+			} // Monster self collision
+		
+			
+	}
+	
+			context.fillStyle = "#00ff00";							
+			context.beginPath();
+			context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
 			context.fill();
 	
 	
@@ -243,8 +385,6 @@ loop = function() {
 	controller();
 	
 	render();
-	
-	gun.draw();
 	
 	physics();
 	
@@ -266,35 +406,59 @@ windowsz = {
 
 
 monstertypes = {
+	ntypes:4,
 	stabby:{ 
 		health:4,
-		speed:2.5,
-		timer:72,
-		dmg:7
+		speed:1.5,
+		timer:-1,
+		timerc:0,
+		dmg:7,
+		size:0.5,
+		g:0
 	},
 	shooty:{
 		health:2,
-		speed:3,
-		timer:100,
-		dmg:10
+		speed:0,
+		timer:500,
+		timerc:0,
+		dmg:10,
+		size:0.7,
+		g:1
 	},
 	speedy:{
 		health:3,
-		speed:5,
-		timer:20,
-		dmg:2
+		speed:2,
+		timer:-1,
+		timerc:0,
+		dmg:2,
+		size:0.4,
+		g:0
 	},
 	tanky:{
-		health:7,
-		speed:1,
-		timer:144,
-		dmg:17
+		health:15,
+		speed:0.6,
+		timer:2000,
+		timerc:0,
+		dmg:17,
+		size:1.9,
+		g:1
 	},
+	bully:{
+		health:10,
+		speed:0,
+		timer:277,
+		timerc:0,
+		dmg:15,
+		size:1.4,
+		g:0
+		
+	}
 }
 
 
 room_load = {
 	doors:[0,0,0,0],
+	denable:1,
 	next:[],
 	foundroom:function(){
 		var roomid = World.rooms[env.temproom]
@@ -347,20 +511,17 @@ room_load = {
 				}
 			}
 		}
-		//console.log(room_load.doors)
 		Map.map = output
 		
 	},
 
-	
 	loadnew:function(room) {
-	Map.Monsters = []
-	World.rooms[env.curroom] = 4
+	room_load.denable = 0
+	gun.bullets = []
+	
 	for (i=0;i<=3;i++){
 	room_load.doors[i] = 0
-	//console.log(typeof World.rooms[room-9])
 	}
-		//console.log(room)
 	if (World.rooms[room+9] !=0 && typeof World.rooms[room+9] != "undefined" ){
 		room_load.doors[2] = 1
 	}
@@ -374,98 +535,108 @@ room_load = {
 		room_load.doors[3] = 1
 	}
 	
-	
-	room_load.Monstergen();
 	room_load.foundroom();
-	room_load.collisiongen();
-	
-
-	//console.log(room_load.walkable)
-},
-	
-	
-	collisiongen:function(){
-		for(i=0;i<Map.map.length;i++){
-			switch(Map.map[i]){
-				case 2:
-
-				break;
-				
-				case 4:
-
-				break;
-					
-				case 5:
-
-				break;
-					
-				case 3:
-
-			}
-		}
+	room_load.Monstergen();
+	World.rooms[env.curroom] = 4
 	},
 	
+	gen:function(seed){
+		var n = (seed*seed).toString()
+		var digits = 4
+		for (i=n.length;i < digits*2;i++){
+			n = n.substring(i,i-1) + n
+			
+		}
+		var start = (n.length/2) - 2;
+		var end = start+digits
+		return n.substring(start,end);
+	},
 	
 	Monstergen:function(){
-		var nmon = 0
-		var n = World.rooms[env.curroom]
-		if (n<1000){
-			nmon = 4
-		}else if (n >=1000 && n < 3500){
-			nmon = 3
-		}else if (n >= 3500 && n <8000){
-			nmon = 2
-		}else if (n >= 8000){
-			nmon = 1
-		}
-		
-		for (i=0;i < nmon ; i++){
-			var t = World.gen(); // something here is causing the thing to ojly spawn on enemy
-			console.log(i)
-			if (t<1000){
-					type = 4
-				//console.log("4")
-				} 
-			if (t >=1000 && t < 3500){
-					type = 3
-				//console.log("3")
-				}
-			if (t >= 3500 && t <8000){
-					type = 2
-				//console.log("2")
-				}
-			if (t >= 8000){
-					type = 1
-				//console.log("1")
-				}
-			var health =0
-			
-			if (type == 1){
-					health = monstertypes.stabby.health
-				}else if (type == 2){
-					health = monstertypes.shooty.health
-				}else if (type == 3){
-					health = monstertypes.speedy.health
-				}else if (type == 4){
-					health = monstertypes.tanky.health
-				}
-			
-			Map.Monsters.push({
-			type:type,
-			health:health
+			Map.Monsters = []
+			var roomid = World.rooms[env.temproom]
+			if (roomid == 4){
+				console.log("travelled")
+				return;
+			}
+			if (roomid == 2){
+				console.log("boss room")
+				gun.bullets.push({
+					x:context.canvas.width/2,
+					y:context.canvas.height/2,
+					xv:0,
+					yv:0,
+					u:2
+				})
+				return;
+			}
+			var nmon = Math.ceil(roomid/2000)
+			for(n=0;n<nmon;n++){
+			roomid = room_load.gen(roomid)
+			var x = ((roomid/9999) * 1000) + 580
+			roomid = room_load.gen(roomid)
+			var y = ((roomid/9999) * 451) + 263
+			roomid = room_load.gen(roomid)
+			var t = Math.floor(roomid/(9999/monstertypes.ntypes))
+			switch(t){
+				case 0:
+					var health=monstertypes.stabby.health
+					var speed=monstertypes.stabby.speed
+					var timer=monstertypes.stabby.timer
+					var timerc=monstertypes.stabby.timerc
+					var dmg=monstertypes.stabby.dmg
+					var size=monstertypes.stabby.size
+					var g=monstertypes.stabby.g
+				break;
+				case 1:
+					var health=monstertypes.shooty.health
+					var speed=monstertypes.shooty.speed
+					var timer=monstertypes.shooty.timer
+					var timerc=monstertypes.shooty.timerc
+					var dmg=monstertypes.shooty.dmg
+					var size=monstertypes.shooty.size
+					var g=monstertypes.shooty.g
+				break;
+				case 2:
+					var health=monstertypes.speedy.health
+					var speed=monstertypes.speedy.speed
+					var timer=monstertypes.speedy.timer
+					var timerc=monstertypes.speedy.timerc
+					var dmg=monstertypes.speedy.dmg
+					var size=monstertypes.speedy.size
+					var g=monstertypes.speedy.g
+				break;
+				case 3:
+					var health=monstertypes.tanky.health
+					var speed=monstertypes.tanky.speed
+					var timer=monstertypes.tanky.timer
+					var timerc=monstertypes.tanky.timerc
+					var dmg=monstertypes.tanky.dmg
+					var size=monstertypes.tanky.size
+					var g=monstertypes.tanky.g
+				break;
+					
+			}
+		Map.Monsters.push({
+			x:x,
+			y:y,
+			xv:0,
+			yv:0,
+			health:health,
+			speed:speed,
+			timer:timer,
+			timerc:timerc,
+			dmg:dmg,
+			size:size,
+			g:g
 		})
 		}
-		
 	}
 }
 
 
-anims = {
-	
-}
-
-
 World = { // middle square method
+	
 	gen:function(){
 		var n = (World.seed*World.seed).toString()
 		var digits = 4
@@ -483,7 +654,6 @@ World = { // middle square method
 	
 	printworld:function(){		var x = 0
 		var y = 9
-		//console.log(World.rooms.slice(x,y))
 		x +=9
 		y +=9
 				console.log(World.rooms.slice(x,y))
@@ -515,9 +685,6 @@ World = { // middle square method
 		
 		var start = room_load
 		var o = World.gen().toString()
-		var via = Math.ceil((parseInt(o.substring(0,2)))/100*World.rooms.length)
-		//console.log(starty)
-		//console.log(startx)
 		var size = 2564
 		var startx = (env.curroom%9)
 		var starty = Math.floor(env.curroom/9) 
@@ -529,7 +696,6 @@ World = { // middle square method
 			var newx = 0
 			var newy = 0
 			var t = World.gen(); 	
-			//console.log(t)
 			if (t < 5000){
 				if (t < 2500){
 					var d = 1
@@ -540,10 +706,7 @@ World = { // middle square method
 				var d = 4
 			}else{
 				var d = 3
-			}
-			//console.log(d)
-			//console.log(cy)
-			//console.log(cx)
+				}
 			switch(d){
 				case 1:
 					newx = cx
@@ -569,17 +732,13 @@ World = { // middle square method
 			var index = newy*9+newx 
 			cx = newx
 			cy = newy
-			//console.log(index)
-			//console.log(newy)
-			//console.log(newx)
+		
 			if(i!=size-1 && index < World.rooms.length && index>0){
 				
 				World.rooms[index] = parseInt(World.gen())
 				previndex = index
-			//	console.log(previndex)
 			}else{
 				if (index > World.rooms.length || index < 0){
-					//console.log (previndex)
 					World.rooms[previndex] = 2
 					break
 				}else{
@@ -593,7 +752,7 @@ World = { // middle square method
 		World.printworld()
 	},
 
-	seed:9943,
+	seed:6969,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -609,32 +768,28 @@ World = { // middle square method
 }
 
 
-
-
 	if (window.screen.availWidth = 2560){	
 	windowsz.x = 1818
 	windowsz.y = 1297
-	}	
+	}			// decide what resolution to run the game at depending on the users screen size
 	else if (window.screen.availWidth = 1920){
 	windowsz.x = 1364
 	windowsz.y = 973
 	
-	}
+	}		// same
 	
-	World.branch()
-	room_load.loadnew(env.curroom)
-	var guy = new Image();	
-	guy.src = "guy.png";
+	World.branch()						// generate world
+	room_load.loadnew(env.curroom)		// generate starting room, initialise loop
+
 	window.addEventListener("click", function(){
 		var xdiff = mouse.x-env.x
 		var ydiff = mouse.y-env.y
 		var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
-		console.log(mouse.x, mouse.y)
 		var sf = gun.velocity/Length
 		
 				gun.bullets.push({
-					x:env.x,
-					y:env.y,
+					x:env.x + (env.width/2),
+					y:env.y + (env.height/2),
 					xv:xdiff*sf,
 					yv:ydiff*sf,
 					u:0
