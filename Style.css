@@ -24,7 +24,7 @@
 .abilities {
     border-width: thin;
     border-style: solid;
-    height: 212px;
+    height: 206px;
     display: flex;
     flex-direction: column;
     padding-left: 6px;

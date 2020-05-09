@@ -222,7 +222,24 @@ gun = {
 		}
 		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x,env.y,env.radius/4,context.canvas.width/2,context.canvas.height/2) && gun.bullets[i].u == 2){
-				alert("you win")
+				alert("you win, loading new room")
+				env.y-=100
+				World.rooms = [
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,
+		  ]
+				env.curroom = 40
+				World.rooms[env.curroom] = 1
+				World.branch();
+				room_load.loadnew(env.curroom)
+				Map.Monsters = []
 			}
 		}
 	}
@@ -751,8 +768,8 @@ World = { // middle square method
 		World.rooms[env.curroom] = 1
 		World.printworld()
 	},
-
-	seed:6969,
+	
+	seed:9285,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
