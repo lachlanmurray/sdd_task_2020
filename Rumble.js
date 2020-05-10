@@ -1,7 +1,6 @@
 var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision;
 context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
-		context.canvas.height = window.innerHeight -320;
-		context.canvas.width = window.innerWidth -400;
+
 
 
 env = {
@@ -14,8 +13,9 @@ env = {
 	yvel:0,
 	curroom:40,
 	temproom:0,
-	adjust:0,
-	hp:15
+	adjustx:0,
+	adjusty:0,
+	hp:20
 	
 };
 
@@ -104,6 +104,11 @@ physics = function(){
 	//collision
 	if (env.y < 1){}
 	
+	const syncWait = ms => {
+    const end = Date.now() + ms
+    while (Date.now() < end) continue
+}
+	
 	if (env.y < 12 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
@@ -128,10 +133,20 @@ physics = function(){
 	else if (env.x + env.width > context.canvas.width-12 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
+		/*for(l=0;l<108;l++){
+			env.adjustx += context.canvas.width/108
+			physics();
+			render();
+			window.requestAnimationFrame(render)
+			console.log(env.adjustx)
+			syncWait(6.945)
+		}*/
 		env.x = env.width
 		env.curroom = env.curroom+1
 		
 	}
+	
+	
 	
 	if (env.y <=10){
 			env.y=10
@@ -152,9 +167,9 @@ physics = function(){
 	
 	if (env.hp <= 0){
 		alert("you have died")
-		env.hp = 5
+		env.hp = 20
 	}
-	gun.checkdmg();
+	gun.checkdmg()
 }
 
 
@@ -190,9 +205,11 @@ gun = {
 		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
 				gun.bullets.splice(i,1)
+				env.xvel+= gun.bullets[i].xv
+				env.yvel+= gun.bullets[i].yv
 				env.hp -= 1
 			}
-		}
+		} //check if an anamy bullet hits the player
 		var rmb = []
 		var rmm = []
 		for(m=0;m<Map.Monsters.length;m++){
@@ -206,7 +223,7 @@ gun = {
 					}
 				}
 			}
-		}
+		}	// check if player bullet his enemy
 		for(rb=0;rb<rmb.length;rb++){
 			gun.bullets.splice(rmb[rb],1)
 		}
@@ -241,7 +258,9 @@ gun = {
 				room_load.loadnew(env.curroom)
 				Map.Monsters = []
 			}
-		}
+		}		// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
+		
+		
 	}
 	
 }
@@ -281,20 +300,9 @@ render = function() {
 		var dy = Math.floor(i / Map.columns) * Map.height 
 		
 		var img = document.getElementById("map");
-		
-		
-		if (Map.scalex <= Map.scaley){
-			Map.scaley = Map.scalex
-		} else {
-			Map.scalex = Map.scaley
-		}
-		if (Map.scalex < 0.25){
-			Map.scalex = 0.25
-			Map.scaley = 0.25
-		}
 			
 
-		context.drawImage(img, xs, ys, Map.width, Map.height, dx * Map.scalex + env.adjust, dy * Map.scaley, Map.width * Map.scalex, Map.height * Map.scaley)
+		context.drawImage(img, xs, ys, Map.width, Map.height, dx + env.adjustx, dy +env.adjusty, Map.width, Map.height)
 		}
 	
 	for(i=0;i<gun.bullets.length;i++){
@@ -317,14 +325,17 @@ render = function() {
 			var yd = (env.y+env.height/2)-Map.Monsters[f].y
 			var Length = Math.sqrt((xd*xd)+(yd*yd))
 			var ms = Map.Monsters[f].speed/Length
+			var oxd = xd
+			var oyd = yd
 			Map.Monsters[f].xv = xd*ms
 			Map.Monsters[f].yv = yd*ms
-			Map.Monsters[f].x += Map.Monsters[f].xv
-			Map.Monsters[f].y += Map.Monsters[f].yv
+			Map.Monsters[f].x  += Map.Monsters[f].xv
+			Map.Monsters[f].y  += Map.Monsters[f].yv
+			
 		
 		
 		//Ranged monster attack if timer is done
-			if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
+			if(Map.Monsters[f].timerc == Map.Monsters[f].timer || Map.Monsters[f].timerc == Map.Monsters[f].timer -20 || Map.Monsters[f].timerc == Map.Monsters[f].timer -40){
 				if(Map.Monsters[f].g != 0){
 				
 				Map.Monsters[f].x -= Map.Monsters[f].xv
@@ -337,8 +348,8 @@ render = function() {
 				}
 				for (g=0;g<shootlist.length;g++){
 				for (i=0;i<6;i++){
-					var xvmod = Math.sin(360-(45+g*3)*i)
-					var yvmod = Math.cos(360-(45+g*3)*i)
+					var xvmod = Math.sin(360+(45*i))
+					var yvmod = Math.cos(360+(45*i))
 					var xg = parseInt(Map.Monsters[shootlist[g]].x.toString())
 					var yg = parseInt(Map.Monsters[shootlist[g]].y.toString())
 					var xx = xvmod * 3
@@ -354,9 +365,11 @@ render = function() {
 				}
 					
 				}
+				if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
 				Map.Monsters[f].timerc = 0
+				}
 				Map.Monsters[f].speed = 0
-			}else if(Map.Monsters[f].g !=0){
+			}else if(Map.Monsters[f].g != 0){
 							Map.Monsters[f].speed += 0.004
 			}
 			
@@ -382,8 +395,23 @@ render = function() {
 					}
 				}
 			} // Monster self collision
-		
-			
+			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),Map.Monsters[f].size*25,Map.Monsters[f].x,Map.Monsters[f].y)){
+				if(Map.Monsters[f].g !=1){
+					env.hp -= Map.Monsters[f].dmg
+					Map.Monsters[f].x -= Map.Monsters[f].xv
+					Map.Monsters[f].y += Map.Monsters[f].yv
+					env.xvel += Map.Monsters[f].xv*7
+					env.yvel += Map.Monsters[f].yv*7
+					
+				}else{
+					Map.Monsters[f].timerc = Map.Monsters[f].timer -1
+					Map.Monsters[f].x -= Map.Monsters[f].xv
+					Map.Monsters[f].y += Map.Monsters[f].yv
+					env.xvel += Map.Monsters[f].xv*2
+					env.yvel += Map.Monsters[f].yv*2
+				}
+				
+				}
 	}
 	
 			context.fillStyle = "#00ff00";							
@@ -391,7 +419,7 @@ render = function() {
 			context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
 			context.fill();
 	
-	
+	document.querySelector('.hp .val').innerHTML = env.hp
 }
 
 
@@ -405,7 +433,7 @@ loop = function() {
 	
 	physics();
 	
-	setTimeout(window.requestAnimationFrame(loop), 1000/144); // recursively call this function
+	setTimeout(window.requestAnimationFrame(loop)); // recursively call this function
 	
 };
 
@@ -425,40 +453,40 @@ windowsz = {
 monstertypes = {
 	ntypes:4,
 	stabby:{ 
-		health:4,
-		speed:1.5,
+		health:5,
+		speed:2.2,
 		timer:-1,
 		timerc:0,
-		dmg:7,
+		dmg:3,
 		size:0.5,
 		g:0
 	},
 	shooty:{
-		health:2,
+		health:3,
 		speed:0,
 		timer:500,
 		timerc:0,
-		dmg:10,
+		dmg:1,
 		size:0.7,
 		g:1
 	},
 	speedy:{
-		health:3,
-		speed:2,
+		health:2,
+		speed:3,
 		timer:-1,
 		timerc:0,
-		dmg:2,
+		dmg:0.5,
 		size:0.4,
 		g:0
 	},
 	tanky:{
-		health:15,
-		speed:0.6,
-		timer:2000,
+		health:8,
+		speed:0.675,
+		timer:-1,
 		timerc:0,
-		dmg:17,
+		dmg:4,
 		size:1.9,
-		g:1
+		g:0
 	},
 	bully:{
 		health:10,
@@ -555,6 +583,7 @@ room_load = {
 	room_load.foundroom();
 	room_load.Monstergen();
 	World.rooms[env.curroom] = 4
+		
 	},
 	
 	gen:function(seed){
@@ -799,37 +828,28 @@ World = { // middle square method
 	room_load.loadnew(env.curroom)		// generate starting room, initialise loop
 
 	window.addEventListener("click", function(){
-		var xdiff = mouse.x-env.x
-		var ydiff = mouse.y-env.y
+		var xdiff = mouse.x-env.x-(env.width/2)
+		var ydiff = mouse.y-env.y-(env.height/2)
 		var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
 		var sf = gun.velocity/Length
+		var xv = xdiff*sf
+		var yv = ydiff*sf
 		
+		env.xvel -= xv*0.2
+		env.yvel -= yv*0.2
 				gun.bullets.push({
 					x:env.x + (env.width/2),
 					y:env.y + (env.height/2),
-					xv:xdiff*sf,
-					yv:ydiff*sf,
+					xv:xv,
+					yv:yv,
 					u:0
 				})
 	});
 
 	window.addEventListener("mousemove", function (e) {
-		mouse.x = e.clientX-385
-		mouse.y = e.clientY-90
-	})
 
-	window.addEventListener("resize",function() {
-		var w = window.innerWidth;
-		var h = window.innerHeight;
-		
-		Map.scalex = w/windowsz.x;
-		Map.scaley = h/windowsz.y;
-		if (window.innerheight = 1297){
-				context.canvas.height = window.innerHeight -320;
-		} else {
-		context.canvas.height = window.innerHeight -320;
-		}
-		context.canvas.width = window.innerWidth -400;
+		mouse.x = e.clientX-404
+		mouse.y = e.clientY-89
 	})
 	window.addEventListener("keydown",keypress.keyListener);
 	window.addEventListener("keyup",keypress.keyListener);

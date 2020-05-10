@@ -12,7 +12,7 @@
 }
 
 .Itemsheet {
-    width: 384px;
+    width: 403px;
     border-width: thin;
     border-style: solid;
     height: 976px;
@@ -24,13 +24,13 @@
 .abilities {
     border-width: thin;
     border-style: solid;
-    height: 206px;
+    height: 214px;
     display: flex;
     flex-direction: column;
     padding-left: 6px;
     padding-top: 14px;
     margin-left: -8px;
-    width: 2542px;
+    width: 2552px;
     margin-top: -2px;
 }
 
@@ -41,10 +41,11 @@
     border-style: solid;
     margin-top: -8px;
     margin-left: -8px;
-    width: 2546px;
+    width: 2558px;
 }
 
 
 .body {
 	background-color:darkslategray;
+	overflow:hidden;
 }
