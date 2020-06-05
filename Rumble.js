@@ -6,7 +6,7 @@ context = document.querySelector("canvas").getContext("2d");	// making the canva
 env = {
 	height:35,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	width:35,
-	radius:17.5,
+	radius:30,
 	x:400,
 	y:500,
 	xvel:0,
@@ -109,28 +109,28 @@ physics = function(){
     while (Date.now() < end) continue
 }
 	
-	if (env.y < 12 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
+	if (env.y < 122 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
-		env.y = context.canvas.height - env.height
+		env.y = context.canvas.height - env.height - 122
 		env.curroom = env.curroom-9
 		
 	}
-	else if (env.x < 12 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
+	else if (env.x < 122 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
-		env.x = context.canvas.width - env.width
+		env.x = context.canvas.width - env.width -122
 		env.curroom = env.curroom-1
 	
 	}	
-	else if (env.y + env.height > context.canvas.height-12 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
+	else if (env.y + env.height > context.canvas.height-122 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
-		env.y = env.height
+		env.y = env.height+122
 		env.curroom = env.curroom+9
 		
 	}	
-	else if (env.x + env.width > context.canvas.width-12 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
+	else if (env.x + env.width > context.canvas.width-122 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
 		/*for(l=0;l<108;l++){
@@ -141,24 +141,24 @@ physics = function(){
 			console.log(env.adjustx)
 			syncWait(6.945)
 		}*/
-		env.x = env.width
+		env.x = env.width +122
 		env.curroom = env.curroom+1
 		
 	}
 	
 	
 	
-	if (env.y <=10){
-			env.y=10
+	if (env.y <=120){
+			env.y=120
 	}	
-	if (env.x <=10){
-		env.x = 10
+	if (env.x <=120){
+		env.x = 120
 	}	
-	if (env.y + env.height >= context.canvas.height-10){
-		env.y = context.canvas.height - env.height -10
+	if (env.y + env.height >= context.canvas.height-120){
+		env.y = context.canvas.height - env.height -120
 	}	
-	if (env.x + env.width >= context.canvas.width-10){
-		env.x = context.canvas.width-env.width-10
+	if (env.x + env.width >= context.canvas.width-120){
+		env.x = context.canvas.width-env.width-120
 	}	
 	
 	if (Map.Monsters.length == 0){
@@ -202,14 +202,6 @@ gun = {
 		
 	},
 	checkdmg:function(){
-		for(i=0;i<gun.bullets.length;i++){
-			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
-				gun.bullets.splice(i,1)
-				env.xvel+= gun.bullets[i].xv
-				env.yvel+= gun.bullets[i].yv
-				env.hp -= 1
-			}
-		} //check if an anamy bullet hits the player
 		var rmb = []
 		var rmm = []
 		for(m=0;m<Map.Monsters.length;m++){
@@ -227,6 +219,14 @@ gun = {
 		for(rb=0;rb<rmb.length;rb++){
 			gun.bullets.splice(rmb[rb],1)
 		}
+		for(i=0;i<gun.bullets.length;i++){
+			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
+				gun.bullets.splice(i,1)
+				env.xvel+= gun.bullets[i].xv
+				env.yvel+= gun.bullets[i].yv
+				env.hp -= 1
+			}
+		} //check if an anamy bullet hits the player
 		for(rm=0;rm<rmm.length;rm++){
 			Map.Monsters.splice(rmm[rm],1)
 			try{
@@ -236,6 +236,7 @@ gun = {
 			catch(err){
 				
 			}
+			
 		}
 		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x,env.y,env.radius/4,context.canvas.width/2,context.canvas.height/2) && gun.bullets[i].u == 2){
@@ -319,8 +320,25 @@ render = function() {
 			Map.Monsters[f].timerc += 1
 			context.fillStyle = "#ff0000";							
 			context.beginPath();									
-			context.arc(Map.Monsters[f].x,Map.Monsters[f].y,Map.Monsters[f].size*30,0,Math.PI*2,true)			
+			context.arc(Map.Monsters[f].x,Map.Monsters[f].y,Map.Monsters[f].size*30,0,Math.PI*2,true)	
 			context.fill();
+			switch(Map.Monsters[f].size){
+				case 0.4:
+					context.drawImage(img,280,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*80,Map.Monsters[f].y-Map.Monsters[f].size*80,192*Map.Monsters[f].size,192*Map.Monsters[f].size);
+				break;
+				
+				case 0.7:
+					context.drawImage(img,155,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+				break;
+					
+				case 1.4:
+					context.drawImage(img,430,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+				break;
+					
+				case 1.9:
+					context.drawImage(img,430,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
+				break;
+			}
 			var xd = (env.x+env.width/2)-Map.Monsters[f].x
 			var yd = (env.y+env.height/2)-Map.Monsters[f].y
 			var Length = Math.sqrt((xd*xd)+(yd*yd))
@@ -433,6 +451,12 @@ loop = function() {
 	
 	physics();
 	
+	controller();
+	
+	render();
+	
+	physics();
+
 	setTimeout(window.requestAnimationFrame(loop)); // recursively call this function
 	
 };
