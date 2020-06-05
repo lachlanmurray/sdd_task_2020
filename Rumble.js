@@ -15,8 +15,9 @@ env = {
 	temproom:0,
 	adjustx:0,
 	adjusty:0,
-	hp:20
-	
+	hp:20,
+	debug:0,
+	animframe:0
 };
 
 
@@ -26,6 +27,7 @@ keypress = {
 	w:false,
 	s:false,
 	j:false,
+	lastdir:1,
 	keyListener:function(event) {
 		var keydown = (event.type == "keydown")?true:false;
 		var keyup = (event.type == "keyup")?false:true;
@@ -55,37 +57,34 @@ keypress = {
 controller = function() {
 	env.dc += 1
 	if (keypress.up){ 																	
-		env.yvel -=0.15
+		env.yvel -=0.125
 	}
 		if (env.yvel < -3.5){
 		env.yvel = -3.5
 	}
 	if (keypress.down){																		
-		env.yvel +=0.15
+		env.yvel +=0.125
 	}
 		if (env.yvel > 3.5){
 		env.yvel = 3.5
 	}
 	if (keypress.left){																			
-		env.xvel -= 0.15
+		env.xvel -= 0.125
 	}
 		if (env.xvel < -3.5){
 		env.xvel = -3.5
 	}
 	if (keypress.right){																		
-		env.xvel += 0.15
+		env.xvel += 0.125
 	}
 		if (env.xvel > 3.5){
 		env.xvel = 3.5
 	}
 	
-if (Math.pow(env.xvel, 2) + Math.pow(env.yvel, 2) >= 15){
+if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
 	env.xvel *= 0.9
 	env.yvel *= 0.9
 }
-
-	
-
 	
 };
 
@@ -109,56 +108,48 @@ physics = function(){
     while (Date.now() < end) continue
 }
 	
-	if (env.y < 122 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
+	if (env.y < 84 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
-		env.y = context.canvas.height - env.height - 122
+		env.y = context.canvas.height - env.height - 84
 		env.curroom = env.curroom-9
 		
 	}
-	else if (env.x < 122 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
+	else if (env.x < 88 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
-		env.x = context.canvas.width - env.width -122
+		env.x = context.canvas.width - env.width -88
 		env.curroom = env.curroom-1
 	
 	}	
-	else if (env.y + env.height > context.canvas.height-122 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
+	else if (env.y + env.height > context.canvas.height-78 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
-		env.y = env.height+122
+		env.y = env.height+78
 		env.curroom = env.curroom+9
 		
 	}	
-	else if (env.x + env.width > context.canvas.width-122 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
+	else if (env.x + env.width > context.canvas.width-90 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
-		/*for(l=0;l<108;l++){
-			env.adjustx += context.canvas.width/108
-			physics();
-			render();
-			window.requestAnimationFrame(render)
-			console.log(env.adjustx)
-			syncWait(6.945)
-		}*/
-		env.x = env.width +122
+		env.x = env.width +90
 		env.curroom = env.curroom+1
 		
 	}
 	
 	
 	
-	if (env.y <=120){
-			env.y=120
+	if (env.y <=83){
+			env.y=83
 	}	
-	if (env.x <=120){
-		env.x = 120
+	if (env.x <=87){
+		env.x = 87
 	}	
-	if (env.y + env.height >= context.canvas.height-120){
-		env.y = context.canvas.height - env.height -120
+	if (env.y + env.height >= context.canvas.height-77){
+		env.y = context.canvas.height - env.height -77
 	}	
-	if (env.x + env.width >= context.canvas.width-120){
-		env.x = context.canvas.width-env.width-120
+	if (env.x + env.width >= context.canvas.width-89){
+		env.x = context.canvas.width-env.width-89
 	}	
 	
 	if (Map.Monsters.length == 0){
@@ -196,7 +187,7 @@ gun = {
 	bullets:[],
 	velocity:5,
 	collision:function(){
-			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x <20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
+			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x < 20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
 				gun.bullets.splice(i,1)
 			}
 		
@@ -221,9 +212,9 @@ gun = {
 		}
 		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
-				gun.bullets.splice(i,1)
 				env.xvel+= gun.bullets[i].xv
 				env.yvel+= gun.bullets[i].yv
+				gun.bullets.splice(i,1)
 				env.hp -= 1
 			}
 		} //check if an anamy bullet hits the player
@@ -263,7 +254,6 @@ gun = {
 		
 		
 	}
-	
 }
 
 
@@ -307,36 +297,86 @@ render = function() {
 		}
 	
 	for(i=0;i<gun.bullets.length;i++){
+		if(gun.bullets[i].sp){
+				gun.bullets[i].sp +=1
+				if(gun.bullets[i].xv > 0){
+					context.drawImage(img,0,1403,63,52,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width,env.height);
+				}else{
+					context.drawImage(img,70,1403,63,52,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width,env.height);
+				}
+				
+				if(gun.bullets[i].sp == 144){
+					for (i=0;i<12;i++){
+					//alert("doing it")
+					var xvmod = Math.sin(360+(30*i))
+					var yvmod = Math.cos(360+(30*i))
+					var xg = parseInt(gun.bullets[i].x.toString())
+					var yg = parseInt(gun.bullets[i].y.toString())
+					var xx = xvmod * 5
+					var yy = yvmod * 5
+					//context.drawImage(img,155,800+(142*4),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					gun.bullets.push({
+						x:xg,
+						y:yg,
+						xv:xx,
+						yv:yy,
+						u:1
+					})
+					}
+				}
+		}else{
+			context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x,gun.bullets[i].y,env.width/3,env.width/3);
+		}
+			
+			if(env.debug == 1){
 			context.fillStyle = "#0000ff";							// make it draw in red
 			context.beginPath();									// start drawing a new object
 			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
+			context.fill();
+			} // debug code
+			
 			gun.bullets[i].x += gun.bullets[i].xv
 			gun.bullets[i].y += gun.bullets[i].yv
-			context.fill();	
+			
 			gun.collision();
 		}
 	
 	for (f=0; f < Map.Monsters.length; f++){
 			Map.Monsters[f].timerc += 1
+			if(env.debug == 1){
 			context.fillStyle = "#ff0000";							
 			context.beginPath();									
 			context.arc(Map.Monsters[f].x,Map.Monsters[f].y,Map.Monsters[f].size*30,0,Math.PI*2,true)	
 			context.fill();
+			}
 			switch(Map.Monsters[f].size){
 				case 0.4:
-					context.drawImage(img,280,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*80,Map.Monsters[f].y-Map.Monsters[f].size*80,192*Map.Monsters[f].size,192*Map.Monsters[f].size);
+					context.drawImage(img,260,800+(142*(Math.round(env.animframe*4)%4)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*50,Map.Monsters[f].y-Map.Monsters[f].size*80,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
 				break;
 				
 				case 0.7:
-					context.drawImage(img,155,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					if(Map.Monsters[f].timerc > 60){
+						context.drawImage(img,155,800+(142*Math.round(env.animframe)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					} else{
+						context.drawImage(img,155,800+(142*4),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					}
 				break;
 					
-				case 1.4:
-					context.drawImage(img,430,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+				case 0.5:
+					context.drawImage(img,370,800+(142*(Math.round(env.animframe))),90,128,Map.Monsters[f].x-Map.Monsters[f].size*50,Map.Monsters[f].y-Map.Monsters[f].size*64,90*Map.Monsters[f].size,128*Map.Monsters[f].size);
 				break;
 					
 				case 1.9:
-					context.drawImage(img,430,800,128,128,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
+					if(Map.Monsters[f].timerc >= Map.Monsters[f].timer - 400){
+						if(env.x >= Map.Monsters[f].x){
+							context.drawImage(img,473,1265,147,147,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
+						}	else{
+							context.drawImage(img,646,1265,147,147,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
+						}
+						Map.Monsters[f].speed = 0.2
+					} else {
+						context.drawImage(img,0,795+(146*Math.round(env.animframe)),135,145,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
+					}
 				break;
 			}
 			var xd = (env.x+env.width/2)-Map.Monsters[f].x
@@ -354,8 +394,30 @@ render = function() {
 		
 		//Ranged monster attack if timer is done
 			if(Map.Monsters[f].timerc == Map.Monsters[f].timer || Map.Monsters[f].timerc == Map.Monsters[f].timer -20 || Map.Monsters[f].timerc == Map.Monsters[f].timer -40){
-				if(Map.Monsters[f].g != 0){
-				
+				if(Map.Monsters[f].g == 2){
+					//for (i=0;i<6;i++){
+					if(env.x >= Map.Monsters[f].x){
+						var xx = gun.velocity
+						var yy = 0
+					} else {
+						var xx = - gun.velocity
+						var yy = 0
+					}
+					var xg = parseInt(Map.Monsters[f].x.toString())
+					var yg = parseInt(Map.Monsters[f].y.toString())
+					//}
+					if(Map.Monsters[f].timerc == Map.Monsters[f].timerc){
+					   gun.bullets.push({
+						x:xg,
+						y:yg,
+						xv:xx,
+						yv:yy,
+						sp:1,
+						u:1
+					})
+					   }
+				}
+				if(Map.Monsters[f].g == 1){
 				Map.Monsters[f].x -= Map.Monsters[f].xv
 				Map.Monsters[f].y -= Map.Monsters[f].yv
 				var shootlist = []
@@ -372,6 +434,7 @@ render = function() {
 					var yg = parseInt(Map.Monsters[shootlist[g]].y.toString())
 					var xx = xvmod * 3
 					var yy = yvmod * 3
+					context.drawImage(img,155,800+(142*4),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
 					gun.bullets.push({
 						x:xg,
 						y:yg,
@@ -386,8 +449,14 @@ render = function() {
 				if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
 				Map.Monsters[f].timerc = 0
 				}
+				if(Map.Monsters[f].g ==1){
 				Map.Monsters[f].speed = 0
-			}else if(Map.Monsters[f].g != 0){
+				}
+				if(Map.Monsters[f].g == 2){
+					Map.Monsters[f].speed = 0.8
+				}
+			}
+			else if(Map.Monsters[f].g ==1){
 							Map.Monsters[f].speed += 0.004
 			}
 			
@@ -432,13 +501,51 @@ render = function() {
 				}
 	}
 	
-			context.fillStyle = "#00ff00";							
-			context.beginPath();
-			context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
-			context.fill();
-	
+			//context.fillStyle = "#00ff00";							
+			//context.beginPath();
+			//context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
+			//context.fill();
+			
+			if (keypress.up){ 	
+				context.drawImage(img,462,838+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				keypress.lastdir = 0
+			}
+			else if (keypress.down){	
+				context.drawImage(img,492,838+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				keypress.lastdir = 1
+			}
+			else if (keypress.left){	
+				context.drawImage(img,522,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				keypress.lastdir = 2
+			}
+			else if (keypress.right){
+				context.drawImage(img,542,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				keypress.lastdir = 3
+			}
+			else {
+				var offset = 0
+				switch(keypress.lastdir){
+				case 0:
+					offset = 462
+				break;
+				
+				case 1:
+					offset = 492
+				break;
+				
+				case 2:
+					offset = 522
+				break;
+				case 3:
+					offset = 542
+				break;
+			}
+				context.drawImage(img,offset,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+			}
 	document.querySelector('.hp .val').innerHTML = env.hp
+	
 }
+
 
 
 loop = function() {
@@ -451,11 +558,12 @@ loop = function() {
 	
 	physics();
 	
-	controller();
-	
-	render();
-	
-	physics();
+		if(env.animframe >= 3){
+			
+		env.animframe=0
+	}else{
+		env.animframe+=0.035
+	}
 
 	setTimeout(window.requestAnimationFrame(loop)); // recursively call this function
 	
@@ -496,7 +604,7 @@ monstertypes = {
 	},
 	speedy:{
 		health:2,
-		speed:3,
+		speed:2.3,
 		timer:-1,
 		timerc:0,
 		dmg:0.5,
@@ -505,12 +613,12 @@ monstertypes = {
 	},
 	tanky:{
 		health:8,
-		speed:0.675,
-		timer:-1,
+		speed:0.8,
+		timer:2350,
 		timerc:0,
 		dmg:4,
 		size:1.9,
-		g:0
+		g:2
 	},
 	bully:{
 		health:10,
@@ -862,8 +970,8 @@ World = { // middle square method
 		env.xvel -= xv*0.2
 		env.yvel -= yv*0.2
 				gun.bullets.push({
-					x:env.x + (env.width/2),
-					y:env.y + (env.height/2),
+					x:env.x,
+					y:env.y,
 					xv:xv,
 					yv:yv,
 					u:0
