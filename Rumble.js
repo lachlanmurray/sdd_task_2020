@@ -92,8 +92,8 @@ if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
 physics = function(){
 	env.x += env.xvel;	//every frame, add the xvelocity to the xposition of the player
 	env.y += env.yvel
-	env.yvel *= 0.95
-	env.xvel *= 0.95	//slow the player when running left to right, to cancel momentum
+	env.yvel *= 0.92
+	env.xvel *= 0.92	//slow the player when running left to right, to cancel momentum
 	if (Math.pow(env.xvel) < 1){
 		env.xvel = 0
 	}
@@ -515,11 +515,11 @@ render = function() {
 				keypress.lastdir = 1
 			}
 			else if (keypress.left){	
-				context.drawImage(img,522,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,522,837+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 2
 			}
 			else if (keypress.right){
-				context.drawImage(img,542,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,542,837+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 3
 			}
 			else {
@@ -540,7 +540,11 @@ render = function() {
 					offset = 542
 				break;
 			}
-				context.drawImage(img,offset,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+					if(keypress.left || keypress.right || keypress.up || keypress.down){
+						context.drawImage(img,offset,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+					} else {
+						context.drawImage(img,offset,837,21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+					}
 			}
 	document.querySelector('.hp .val').innerHTML = env.hp
 	
@@ -586,7 +590,7 @@ monstertypes = {
 	ntypes:4,
 	stabby:{ 
 		health:5,
-		speed:2.2,
+		speed:1.4,
 		timer:-1,
 		timerc:0,
 		dmg:3,
@@ -604,7 +608,7 @@ monstertypes = {
 	},
 	speedy:{
 		health:2,
-		speed:2.3,
+		speed:1.6,
 		timer:-1,
 		timerc:0,
 		dmg:0.5,
@@ -614,7 +618,7 @@ monstertypes = {
 	tanky:{
 		health:8,
 		speed:0.8,
-		timer:2350,
+		timer:1250,
 		timerc:0,
 		dmg:4,
 		size:1.9,
@@ -967,8 +971,8 @@ World = { // middle square method
 		var xv = xdiff*sf
 		var yv = ydiff*sf
 		
-		env.xvel -= xv*0.2
-		env.yvel -= yv*0.2
+		env.xvel -= xv*0.1
+		env.yvel -= yv*0.1
 				gun.bullets.push({
 					x:env.x,
 					y:env.y,
