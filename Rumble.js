@@ -1,6 +1,7 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision;
-context = document.querySelector("canvas").getContext("2d");	// making the canvas to draw the game on.
-
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar;
+context = document.getElementById("canvas").getContext("2d");	// making the canvas to draw the game on.
+var c = document.getElementById("stats");
+var ctx = c.getContext("2d");
 
 
 env = {
@@ -13,11 +14,11 @@ env = {
 	yvel:0,
 	curroom:40,
 	temproom:0,
-	adjustx:0,
-	adjusty:0,
 	hp:20,
+	gun:"pistol",
 	debug:0,
-	animframe:0
+	animframe:0,
+	invuln:0
 };
 
 
@@ -108,28 +109,28 @@ physics = function(){
     while (Date.now() < end) continue
 }
 	
-	if (env.y < 84 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
+	if (env.y < 0 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
 		room_load.loadnew(env.curroom-9)
 		env.y = context.canvas.height - env.height - 84
 		env.curroom = env.curroom-9
 		
 	}
-	else if (env.x < 88 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
+	else if (env.x < 0 && env.y >400 && env.y < 525 && room_load.doors[3] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-1
 		room_load.loadnew(env.curroom-1)
 		env.x = context.canvas.width - env.width -88
 		env.curroom = env.curroom-1
 	
 	}	
-	else if (env.y + env.height > context.canvas.height-78 && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
+	else if (env.y + env.height > context.canvas.height && env.x >1000 && env.x < 1100 && room_load.doors[2] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+9
 		room_load.loadnew(env.curroom+9)
 		env.y = env.height+78
 		env.curroom = env.curroom+9
 		
 	}	
-	else if (env.x + env.width > context.canvas.width-90 && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
+	else if (env.x + env.width > context.canvas.width && env.y >400 && env.y < 525 && room_load.doors[1] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom+1
 		room_load.loadnew(env.curroom+1)
 		env.x = env.width +90
@@ -139,17 +140,65 @@ physics = function(){
 	
 	
 	
-	if (env.y <=83){
-			env.y=83
+	if (env.y <=180){
+		if (room_load.doors[0] == 1){
+			if (env.x > 1020 && env.x < 1155){
+				if (env.x + env.xvel < 1020){
+					env.x = 1025
+				}else if (env.x + env.xvel > 1155){
+					env.x = 1150
+				}
+			}else{
+				env.y = 180	
+			}
+		}else {
+			env.y = 180
+		}
 	}	
-	if (env.x <=87){
-		env.x = 87
+	if (env.x <=196){
+				if (room_load.doors[3] == 1){
+			if (env.y > 400 && env.y < 525){
+				if (env.y + env.yvel < 440){
+					env.y = 445
+				}else if (env.y + env.yvel > 525){
+					env.y = 520
+				}
+			}else{
+				env.x = 196	
+			}
+		}else {
+			env.x = 196
+		}
 	}	
-	if (env.y + env.height >= context.canvas.height-77){
-		env.y = context.canvas.height - env.height -77
+	if (env.y + env.height >= context.canvas.height-180){
+		if (room_load.doors[2] == 1){
+			if (env.x > 1020 && env.x < 1155){
+				if (env.x + env.xvel < 1020){
+					env.x = 1025
+				}else if (env.x + env.xvel > 1135){
+					env.x = 1130
+				}
+			}else{
+				env.y = context.canvas.height - env.height - 180
+			}
+		}else {
+			env.y = context.canvas.height - env.height - 180
+		}
 	}	
-	if (env.x + env.width >= context.canvas.width-89){
-		env.x = context.canvas.width-env.width-89
+	if (env.x + env.width >= context.canvas.width-180){
+		if (room_load.doors[1] == 1){
+			if (env.y > 400 && env.y < 525){
+				if (env.y + env.yvel < 440){
+					env.y = 445
+				}else if (env.y + env.yvel > 525){
+					env.y = 520
+				}
+			}else{
+				env.x = context.canvas.width-env.width-180	
+			}
+		}else {
+			env.x = context.canvas.width-env.width-180
+		}
 	}	
 	
 	if (Map.Monsters.length == 0){
@@ -216,6 +265,7 @@ gun = {
 				env.yvel+= gun.bullets[i].yv
 				gun.bullets.splice(i,1)
 				env.hp -= 1
+				
 			}
 		} //check if an anamy bullet hits the player
 		for(rm=0;rm<rmm.length;rm++){
@@ -253,7 +303,58 @@ gun = {
 		}		// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
 		
 		
-	}
+	},
+	/*guntypes:{
+		template:{
+			damage:1,
+			cd:0, 		// how long(in frames, 144/s, untill you can fire again)
+			sprite:0,	//its sprite index
+			osp:0,		//origin spread (like a shotgun)
+			ospa:-1,	//origin spread angle
+			sp:0,		// spread(like the tank's bullets)
+			spt:-1,		//spread time, how long after shooting do they spread
+			spa:-1,		//spread angle
+			xp:0,		//explosive, explosion radius
+			xpr:-1,		//explosion radius
+			pc:0,		//peircing ( can go through multiple enemies)
+			bounce:0	// bounces off of walls instead of being destroyed
+		},
+		pistol:{
+			damage:1,
+			sprite:1,
+			cd:18
+		},
+		sniper:{
+			damage:3,
+			sprite:2,
+			pc:1,
+			cd:72
+		},
+		shotgun:{
+			damage:0.5,
+			sprite:3,
+			osp:1,		
+			ospa:30,
+			pellets:6,
+			cd:58
+		},
+		flakCannon:{
+			damage:0.5,
+			sprite:4,
+			sp:1,
+			spt:0.5,
+			spa:30,
+			pellets:2,
+			cd:58
+		},
+		rocketLauncher:{
+			damage:5,
+			sprite:5,
+			xp:1,
+			xpr:50,
+			cd:216
+		}
+	}*/
 }
 
 
@@ -276,25 +377,11 @@ Map = {
 
 
 render = function() {
+	statbar();
 	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
-	
 
-	img = document.getElementById("map").src;
-		for (let i=Map.map.length - 1; i > -1; --i){
+	var img = document.getElementById("map").src;
 		
-		var val= Map.map[i];
-
-		var xs = (val % Map.col) * Map.width;
-		var ys = Math.floor(val/Map.col) * Map.height;
-		
-		var dx = (i % Map.columns) * Map.width 
-		var dy = Math.floor(i / Map.columns) * Map.height 
-		
-		var img = document.getElementById("map");
-			
-
-		context.drawImage(img, xs, ys, Map.width, Map.height, dx + env.adjustx, dy +env.adjusty, Map.width, Map.height)
-		}
 	
 	for(i=0;i<gun.bullets.length;i++){
 		if(gun.bullets[i].sp){
@@ -354,7 +441,7 @@ render = function() {
 					context.drawImage(img,260,800+(142*(Math.round(env.animframe*4)%4)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*50,Map.Monsters[f].y-Map.Monsters[f].size*80,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
 				break;
 				
-				case 0.7:
+				case 0.9:
 					if(Map.Monsters[f].timerc > 60){
 						context.drawImage(img,155,800+(142*Math.round(env.animframe)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
 					} else{
@@ -389,7 +476,11 @@ render = function() {
 			Map.Monsters[f].yv = yd*ms
 			Map.Monsters[f].x  += Map.Monsters[f].xv
 			Map.Monsters[f].y  += Map.Monsters[f].yv
-			
+			if(env.invuln <=400){
+				Map.Monsters[f].x  -= Map.Monsters[f].xv
+				Map.Monsters[f].y  -= Map.Monsters[f].yv
+				env.invuln +=1
+			}
 		
 		
 		//Ranged monster attack if timer is done
@@ -499,6 +590,9 @@ render = function() {
 				}
 				
 				}
+			context.fillStyle = "#00FF00";
+			context.fillRect(Map.Monsters[f].x - (((Map.Monsters[f].size*16)*Map.Monsters[f].health)/2), Map.Monsters[f].y - Map.Monsters[f].size *60, (Map.Monsters[f].size*16)*Map.Monsters[f].health,4);
+		
 	}
 	
 			//context.fillStyle = "#00ff00";							
@@ -506,6 +600,21 @@ render = function() {
 			//context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
 			//context.fill();
 			
+	for (let i=Map.map.length - 1; i > -1; --i){
+		var img = document.getElementById("map");
+		var val= Map.map[i];
+
+		var xs = (val % Map.col) * Map.width;
+		var ys = Math.floor(val/Map.col) * Map.height;
+		
+		var dx = (i % Map.columns) * Map.width 
+		var dy = Math.floor(i / Map.columns) * Map.height 
+		
+		var img = document.getElementById("map");
+			
+
+		context.drawImage(img, xs, ys, Map.width, Map.height, dx + env.adjustx, dy +env.adjusty, Map.width, Map.height)
+		}
 			if (keypress.up){ 	
 				context.drawImage(img,462,838+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 0
@@ -546,16 +655,17 @@ render = function() {
 						context.drawImage(img,offset,837,21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
 					}
 			}
-	document.querySelector('.hp .val').innerHTML = env.hp
+	
 	
 }
-
 
 
 loop = function() {
 
 	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.s	
-	
+	setInterval(function() {
+  // animiate something
+
 	controller();
 	
 	render();
@@ -568,8 +678,8 @@ loop = function() {
 	}else{
 		env.animframe+=0.035
 	}
-
-	setTimeout(window.requestAnimationFrame(loop)); // recursively call this function
+}, 1000/144);
+	
 	
 };
 
@@ -603,7 +713,7 @@ monstertypes = {
 		timer:500,
 		timerc:0,
 		dmg:1,
-		size:0.7,
+		size:0.9,
 		g:1
 	},
 	speedy:{
@@ -641,7 +751,9 @@ room_load = {
 	doors:[0,0,0,0],
 	denable:1,
 	next:[],
+	
 	foundroom:function(){
+		env.invuln = 0
 		var roomid = World.rooms[env.temproom]
 		var output = [
 		  0 ,2 ,2 ,2 ,2 ,1, 2, 2, 2, 2, 3,
@@ -934,7 +1046,7 @@ World = { // middle square method
 		World.printworld()
 	},
 	
-	seed:9285,
+	seed:6969,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -949,6 +1061,50 @@ World = { // middle square method
 		  ]
 }
 
+
+statbar = function(){
+	var img = document.getElementById("map");
+	ctx.drawImage(img, 804, 0, 202, 488,0,0,403,976);
+	var hp = env.hp.toString()
+	var hp2 = hp.split("")
+	
+	for(i=0;i<hp2.length;i++){
+	switch(hp[i]){
+		case "1":
+			ctx.drawImage(img, 1798, 0, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "2":
+			ctx.drawImage(img, 1898, 0, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "3":
+			ctx.drawImage(img, 1998, 0, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "4":
+			ctx.drawImage(img, 2098, 0, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "5":
+			ctx.drawImage(img, 2198, 0, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "6":
+			ctx.drawImage(img, 1798, 110, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "7":
+			ctx.drawImage(img, 1898, 110, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "8":
+			ctx.drawImage(img, 1998, 110, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "9":
+			ctx.drawImage(img, 2098, 110, 100, 96,120+(87*i),450,100,96);
+		break;
+		case "0":
+			ctx.drawImage(img, 2198, 110, 100, 96,120+(87*i),450,100,96);
+		break;
+	}
+	}
+	
+	ctx.drawImage(img, 1045 + (200*(Math.round(env.animframe*2.5)%2.5)), 32, 100, 128,120,250,200,192);
+}
 
 	if (window.screen.availWidth = 2560){	
 	windowsz.x = 1818
@@ -973,13 +1129,65 @@ World = { // middle square method
 		
 		env.xvel -= xv*0.1
 		env.yvel -= yv*0.1
-				gun.bullets.push({
-					x:env.x,
-					y:env.y,
-					xv:xv,
-					yv:yv,
-					u:0
-				})
+				/*switch(env.gun){
+					case "pistol":
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0
+						})
+						break;
+					case "sniper":
+						for(i=0;i<gun.guntypes.sniper.damage;i++){
+							gun.bullets.push({
+								x:env.x,
+								y:env.y,
+								xv:xv,
+								yv:yv,
+								u:0
+							})
+						}
+					break;
+					case "shotgun":
+						for(i=0;i<gun.guntypes.shotgun.pellets;i++){
+						gun.bullets.push({
+							x:env.x*sin(i/gun.guntypes.shotgun.ospa),
+							y:env.y*sin(i/gun.guntypes.shotgun.ospa),
+							xv:xv,
+							yv:yv,
+							u:0
+						})
+						}
+					break;
+					case "flakCannon":
+						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
+						gun.bullets.push({
+							x:env.x*sin(i/gun.guntypes.flakCanon.spa),
+							y:env.y*sin(i/gun.guntypes.flakCanon.spa),
+							xv:xv,
+							yv:yv,
+							u:0,
+							sp:1
+						})
+						}
+					break;
+					case "rocketLauncher":
+						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0,
+							sp:1
+						})
+						}
+					break;
+						
+				}*/
+				
 	});
 
 	window.addEventListener("mousemove", function (e) {
@@ -989,4 +1197,4 @@ World = { // middle square method
 	})
 	window.addEventListener("keydown",keypress.keyListener);
 	window.addEventListener("keyup",keypress.keyListener);
-	window.requestAnimationFrame(loop); // call the loop function once
+	loop(); // call the loop function once

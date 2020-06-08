@@ -13,8 +13,6 @@
 
 .Itemsheet {
     width: 403px;
-    border-width: thin;
-    border-style: solid;
     height: 976px;
     display: flex;
     flex-direction: column;
@@ -48,4 +46,9 @@
 .body {
 	background-color:darkslategray;
 	overflow:hidden;
+}
+.body .htmlstatscont {
+    width: 0px;
+    height: 0px;
+    display: none;
 }
