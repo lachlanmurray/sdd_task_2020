@@ -1,4 +1,4 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns;
 context = document.getElementById("canvas").getContext("2d");	// making the canvas to draw the game on.
 var c = document.getElementById("stats");
 var ctx = c.getContext("2d");
@@ -7,7 +7,7 @@ var ctx = c.getContext("2d");
 env = {
 	height:35,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	width:35,
-	radius:30,
+	radius:20,
 	x:400,
 	y:500,
 	xvel:0,
@@ -19,7 +19,9 @@ env = {
 	hp:20,
 	debug:0,
 	animframe:0,
-	invuln:0
+	invuln:0,
+	gun:"sniper",
+	coins:0
 };
 
 
@@ -249,10 +251,20 @@ gun = {
 			for(b=0;b<gun.bullets.length;b++){
 				
 				if(collision.circle(Map.Monsters[m].size*30,Map.Monsters[m].x,Map.Monsters[m].y,env.radius/3,gun.bullets[b].x,gun.bullets[b].y) && gun.bullets[b].u == 0){
-					Map.Monsters[m].health -= 1
+					Map.Monsters[m].health -= 1 * gun.bullets[b].m
 					rmb.push(b)
 					if(Map.Monsters[m].health <= 0){
-					rmm.push(m)
+						var temp = Math.round(Math.random(0,7))
+						for(i=0;i<=temp;i++){
+						gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*5,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*5,
+							u:3
+						})
+						}
+						rmm.push(m)
 					}
 				}
 			}
@@ -266,7 +278,9 @@ gun = {
 				env.yvel+= gun.bullets[i].yv
 				gun.bullets.splice(i,1)
 				env.hp -= 1
-				
+			} else if (collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 3){
+				env.coins+=1
+				gun.bullets.splice(i,1)
 			}
 		} //check if an anamy bullet hits the player
 		for(rm=0;rm<rmm.length;rm++){
@@ -304,6 +318,58 @@ gun = {
 		}		// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
 		
 		
+		
+	},
+	guntypes:{
+		template:{
+			damage:1,
+			cd:0, 		// how long(in frames, 144/s, untill you can fire again)
+			sprite:0,	//its sprite index
+			osp:0,		//origin spread (like a shotgun)
+			ospa:-1,	//origin spread angle
+			sp:0,		// spread(like the tank's bullets)
+			spt:-1,		//spread time, how long after shooting do they spread
+			spa:-1,		//spread angle
+			xp:0,		//explosive, explosion radius
+			xpr:-1,		//explosion radius
+			pc:0,		//peircing ( can go through multiple enemies)
+			bounce:0	// bounces off of walls instead of being destroyed
+		},
+		pistol:{
+			damage:1,
+			sprite:1,
+			cd:18
+		},
+		sniper:{
+			damage:50,
+			sprite:2,
+			pc:1,
+			cd:72
+		},
+		shotgun:{
+			damage:0.5,
+			sprite:3,
+			osp:1,		
+			ospa:30,
+			pellets:6,
+			cd:58
+		},
+		flakCannon:{
+			damage:0.5,
+			sprite:4,
+			sp:1,
+			spt:0.5,
+			spa:30,
+			pellets:2,
+			cd:58
+		},
+		rocketLauncher:{
+			damage:5,
+			sprite:5,
+			xp:1,
+			xpr:50,
+			cd:216
+		}
 	}
 }
 
@@ -376,7 +442,7 @@ render = function() {
 					}
 				}
 		}else{
-			context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x,gun.bullets[i].y,env.width/3,env.width/3);
+			context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3);
 		}
 			
 			if(env.debug == 1){
@@ -385,10 +451,15 @@ render = function() {
 			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
 			context.fill();
 			} // debug code
-			
+			if(gun.bullets[i].u != 3){
 			gun.bullets[i].x += gun.bullets[i].xv
 			gun.bullets[i].y += gun.bullets[i].yv
-			
+			} else if (gun.bullets[i].u == 3){
+				gun.bullets[i].xv *= 0.94
+				gun.bullets[i].yv *= 0.94
+				gun.bullets[i].x += gun.bullets[i].xv
+				gun.bullets[i].y += gun.bullets[i].yv
+			}
 			gun.collision();
 		}
 	
@@ -558,26 +629,27 @@ render = function() {
 			context.fillRect(Map.Monsters[f].x - (((Map.Monsters[f].size*32)*Map.Monsters[f].health)/2), Map.Monsters[f].y - Map.Monsters[f].size *60, (Map.Monsters[f].size*32)*Map.Monsters[f].health,4);
 		
 	}
-	
-			//context.fillStyle = "#00ff00";							
-			//context.beginPath();
-			//context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
-			//context.fill();
+			if(env.debug == 1){
+			context.fillStyle = "#00ff00";							
+			context.beginPath();
+			context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
+			context.fill();
+			}
 			
 			if (keypress.up){ 	
-				context.drawImage(img,462,838+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,462,838+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 0
 			}
 			else if (keypress.down){	
-				context.drawImage(img,492,838+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,492,838+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 1
 			}
 			else if (keypress.left){	
-				context.drawImage(img,522,837+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,522,837+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 2
 			}
 			else if (keypress.right){
-				context.drawImage(img,542,837+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+				context.drawImage(img,542,837+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 3
 			}
 			else {
@@ -599,14 +671,12 @@ render = function() {
 				break;
 			}
 					if(keypress.left || keypress.right || keypress.up || keypress.down){
-						context.drawImage(img,offset,839+(36*Math.round(env.animframe)),21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+						context.drawImage(img,offset,839+(36*Math.round(env.animframe)),21,36,env.x-15,env.y-15,env.width*0.9,env.height*1.6875)
 					} else {
-						context.drawImage(img,offset,837,21,36,env.x-(env.width/2),env.y-env.height,env.width*0.9,env.height*1.6875)
+						context.drawImage(img,offset,837,21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 					}
 			}
-	
 }
-
 
 loop = function() {
 
@@ -664,10 +734,10 @@ monstertypes = {
 	},
 	speedy:{
 		health:2,
-		speed:1.6,
+		speed:1.3,
 		timer:-1,
 		timerc:0,
-		dmg:0.5,
+		dmg:1,
 		size:0.4,
 		g:0
 	},
@@ -1007,6 +1077,7 @@ World = { // middle square method
 		  ]
 }
 
+
 statbar = function(){
 	var img = document.getElementById("map");
 	ctx.drawImage(img, 804, 0, 202, 488,0,0,403,976);
@@ -1049,7 +1120,48 @@ statbar = function(){
 	}
 	
 	ctx.drawImage(img, 1045 + (200*(Math.round(env.animframe*2.5)%2.5)), 32, 100, 128,120,250,200,192);
+	ctx.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 45,75,600,50,50);
+	
+	var coins = env.coins.toString()
+	var coins2 = coins.split("")
+	
+	for(i=0;i<coins2.length;i++){
+	switch(coins2[i]){
+		case "1":
+			ctx.drawImage(img, 1798, 0, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "2":
+			ctx.drawImage(img, 1898, 0, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "3":
+			ctx.drawImage(img, 1998, 0, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "4":
+			ctx.drawImage(img, 2098, 0, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "5":
+			ctx.drawImage(img, 2198, 0, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "6":
+			ctx.drawImage(img, 1798, 110, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "7":
+			ctx.drawImage(img, 1898, 110, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "8":
+			ctx.drawImage(img, 1998, 110, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "9":
+			ctx.drawImage(img, 2098, 110, 100, 96,150+(35*i),615,30,28);
+		break;
+		case "0":
+			ctx.drawImage(img, 2198, 110, 100, 96,150+(35*i),615,30,28);
+		break;
+	}
+	}
 }
+
+
 
 	if (window.screen.availWidth = 2560){	
 	windowsz.x = 1818
@@ -1074,13 +1186,74 @@ statbar = function(){
 		
 		env.xvel -= xv*0.1
 		env.yvel -= yv*0.1
-				gun.bullets.push({
-					x:env.x,
-					y:env.y,
-					xv:xv,
-					yv:yv,
-					u:0
-				})
+				switch(env.gun){
+					case "pistol":
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0
+						})
+						break;
+					case "sniper":
+							console.log(gun.bullets)
+							gun.bullets.push({
+								x:env.x,
+								y:env.y,
+								xv:xv,
+								yv:yv,
+								u:0,
+								m:gun.guntypes.sniper.damage
+							})
+					break;
+					case "shotgun":
+						for(i=0;i<gun.guntypes.shotgun.pellets;i++){
+							console.log(i)
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0,
+							m:gun.guntypes.shotgun.damage
+						})
+						}
+					break;
+					case "flakCannon":
+						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv*Math.sin(gun.guntypes.shotgun.ospa/i),
+							yv:yv*Math.sin(i/gun.guntypes.shotgun.ospa),
+							u:0,
+							sp:1
+						})
+						}
+					break;
+					case "rocketLauncher":
+						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0,
+							sp:1
+						})
+						}
+					break;
+					default:
+						gun.bullets.push({
+							x:env.x,
+							y:env.y,
+							xv:xv,
+							yv:yv,
+							u:0
+						})
+						
+				}
 	});
 
 	window.addEventListener("mousemove", function (e) {
