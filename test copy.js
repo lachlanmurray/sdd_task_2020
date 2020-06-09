@@ -424,14 +424,12 @@ render = function() {
 				
 				if(gun.bullets[i].sp == 144){
 					for (i=0;i<12;i++){
-					//alert("doing it")
 					var xvmod = Math.sin(360+(30*i))
 					var yvmod = Math.cos(360+(30*i))
 					var xg = parseInt(gun.bullets[i].x.toString())
 					var yg = parseInt(gun.bullets[i].y.toString())
 					var xx = xvmod * 5
 					var yy = yvmod * 5
-					//context.drawImage(img,155,800+(142*4),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
 					gun.bullets.push({
 						x:xg,
 						y:yg,
@@ -439,10 +437,13 @@ render = function() {
 						yv:yy,
 						u:1
 					})
+				
 					}
 				}
-		}else{
-			context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3);
+		}else if(gun.bullets[i].u == 3){
+				 context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 50,gun.bullets[i].x-(env.width/2),gun.bullets[i].y-(env.height/2),50,50);
+			}	else{
+				context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3);
 		}
 			
 			if(env.debug == 1){
@@ -678,10 +679,13 @@ render = function() {
 			}
 }
 
-loop = function() {
+
+	loop = function() {
 
 	// this is the main loop of the game, and just runs whatever submodules need to be run every frame. if this gets too big i might have problems.s	
-	
+	setInterval(function() {
+  // animiate something
+
 	controller();
 	
 	render();
@@ -694,10 +698,11 @@ loop = function() {
 	}else{
 		env.animframe+=0.035
 	}
-
-	setTimeout(window.requestAnimationFrame(loop)); // recursively call this function
+}, 1000/144);
+	
 	
 };
+
 
 
 mouse = {
