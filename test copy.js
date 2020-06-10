@@ -1,9 +1,8 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns,exbar;
 context = document.getElementById("canvas").getContext("2d");	// making the canvas to draw the game on.
-var c = document.getElementById("stats");
-var ctx = c.getContext("2d");
-
-
+var ctx = document.getElementById("stats").getContext("2d");
+var ex 	= document.getElementById("ex").getContext("2d");
+var img = document.getElementById("map");
 env = {
 	height:35,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	width:35,
@@ -23,7 +22,7 @@ env = {
 	gun:"sniper",
 	coins:0,
 	gcd:0,
-	cgcd:-1
+	ccd:0,
 };
 
 
@@ -106,13 +105,6 @@ physics = function(){
 	if (Math.pow(env.yvel) < 1){
 		env.yvel = 0
 	}
-	//collision
-	if (env.y < 1){}
-	
-	const syncWait = ms => {
-    const end = Date.now() + ms
-    while (Date.now() < end) continue
-}
 	
 	if (env.y < 0 && env.x >1000 && env.x < 1100 && room_load.doors[0] == 1 && room_load.denable == 1){
 		env.temproom = env.curroom-9
@@ -142,8 +134,6 @@ physics = function(){
 		env.curroom = env.curroom+1
 		
 	}
-	
-	
 	
 	if (env.y <=180){
 		if (room_load.doors[0] == 1){
@@ -177,11 +167,11 @@ physics = function(){
 	}	
 	if (env.y + env.height >= context.canvas.height-180){
 		if (room_load.doors[2] == 1){
-			if (env.x > 1000 && env.x < 1120){
-				if (env.x + env.xvel < 1000){
-					env.x = 1005
-				}else if (env.x + env.xvel > 1120){
-					env.x = 1115
+			if (env.x > 1020 && env.x < 1155){
+				if (env.x + env.xvel < 1020){
+					env.x = 1025
+				}else if (env.x + env.xvel > 1135){
+					env.x = 1130
 				}
 			}else{
 				env.y = context.canvas.height - env.height - 180
@@ -211,15 +201,11 @@ physics = function(){
 	}
 	
 	if (env.hp <= 0){
-		alert("were you expecting a death animation?")
+		alert("you have died")
 		env.hp = 20
 	}
 	gun.checkdmg()
-	env.gcd +=1
-	
-	if(env.curroom = 3){
-		Map.Monsters = []
-	}
+	env.ccd+=1
 }
 
 
@@ -258,7 +244,7 @@ gun = {
 			for(b=0;b<gun.bullets.length;b++){
 				
 				if(collision.circle(Map.Monsters[m].size*30,Map.Monsters[m].x,Map.Monsters[m].y,env.radius/3,gun.bullets[b].x,gun.bullets[b].y) && gun.bullets[b].u == 0){
-					Map.Monsters[m].health -= 1 * gun.bullets[b].damage
+					Map.Monsters[m].health -= 1 * gun.bullets[b].m
 					rmb.push(b)
 					if(Map.Monsters[m].health <= 0){
 						var temp = Math.round(Math.random(0,7))
@@ -345,13 +331,13 @@ gun = {
 		pistol:{
 			damage:1,
 			sprite:1,
-			cd:35,
+			cd:18
 		},
 		sniper:{
 			damage:50,
 			sprite:2,
 			pc:1,
-			cd:144
+			cd:72
 		},
 		shotgun:{
 			damage:0.5,
@@ -795,7 +781,7 @@ room_load = {
 		switch(co){
 			case 1:
 			if(room_load.doors[0] == 0){
-				output[i] = 2
+			output[i] = 2
 			}
 			break;
 			
@@ -827,15 +813,7 @@ room_load = {
 		if(roomid == 2){
 			for (i=0;i<output.length;i++){
 				if(output[i] == 5){
-					output[i] = 10
-				}
-			}
-		}
-		//alert(roomid)
-		if(roomid == 3){
-			for (i=0;i<output.length;i++){
-				if(output[i] == 5){
-					output[i] = 11
+					output[i] = 6
 				}
 			}
 		}
@@ -862,9 +840,9 @@ room_load = {
 	if (World.rooms[room-1] !=0 && typeof World.rooms[room-1] != "undefined" ){
 		room_load.doors[3] = 1
 	}
-	room_load.Monstergen();
+	
 	room_load.foundroom();
-	//room_load.Monstergen();
+	room_load.Monstergen();
 	World.rooms[env.curroom] = 4
 		
 	},
@@ -882,7 +860,7 @@ room_load = {
 	},
 	
 	Monstergen:function(){
-			
+			Map.Monsters = []
 			var roomid = World.rooms[env.temproom]
 			if (roomid == 4){
 				console.log("travelled")
@@ -946,7 +924,6 @@ room_load = {
 				break;
 					
 			}
-		if(World.rooms[env.temproom])
 		Map.Monsters.push({
 			x:x,
 			y:y,
@@ -1015,7 +992,7 @@ World = { // middle square method
 		
 		var start = room_load
 		var o = World.gen().toString()
-		var size = 10
+		var size = 2564
 		var startx = (env.curroom%9)
 		var starty = Math.floor(env.curroom/9) 
 		var cx = startx
@@ -1062,12 +1039,11 @@ World = { // middle square method
 			var index = newy*9+newx 
 			cx = newx
 			cy = newy
-			
+		
 			if(i!=size-1 && index < World.rooms.length && index>0){
 				
 				World.rooms[index] = parseInt(World.gen())
 				previndex = index
-				
 			}else{
 				if (index > World.rooms.length || index < 0){
 					World.rooms[previndex] = 2
@@ -1076,17 +1052,14 @@ World = { // middle square method
 					World.rooms[index] = 2
 				}
 			}
-			if(parseInt(World.rooms[index])%14 == 0){
-			World.rooms[index] = 3
-			//alert("written at" + index)
-			}
+			
 			
 		}
-		World.rooms[env.curroom] = 3
+		World.rooms[env.curroom] = 1
 		World.printworld()
 	},
 	
-	seed:1234,
+	seed:6969,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -1185,6 +1158,10 @@ statbar = function(){
 	}
 }
 
+exbar = function(){
+	var img = document.getElementById("map");
+	ex.drawImage(img, 804, 0, 202, 488,0,0,403,976);
+}
 
 
 	if (window.screen.availWidth = 2560){	
@@ -1198,10 +1175,8 @@ statbar = function(){
 	}		// same
 	
 	World.branch()						// generate world
-	room_load.loadnew(env.curroom)		// generate starting room, initialise loop
-
+	room_load.loadnew(env.curroom)		// generate starting room
 	window.addEventListener("click", function(){
-		if(env.gcd >= env.cgcd){
 		var xdiff = mouse.x-env.x-(env.width/2)
 		var ydiff = mouse.y-env.y-(env.height/2)
 		var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
@@ -1211,6 +1186,24 @@ statbar = function(){
 		
 		env.xvel -= xv*0.1
 		env.yvel -= yv*0.1
+		
+		switch(env.gun){
+			case "pistol":
+				env.gcd = gun.guntypes.pistol.cd
+			break;
+			case "sniper":
+				env.gcd = gun.guntypes.sniper.cd
+			break;
+			case "shotgun":
+				env.gcd = gun.guntypes.shotgun.cd
+			break;
+			default:
+				env.gcd = gun.guntypes.pistol.cd
+			break;
+		}
+		
+			if(env.gcd < env.ccd){
+				env.ccd = 0
 				switch(env.gun){
 					case "pistol":
 						gun.bullets.push({
@@ -1218,8 +1211,7 @@ statbar = function(){
 							y:env.y,
 							xv:xv,
 							yv:yv,
-							u:0,
-							damage:gun.guntypes.pistol.damage
+							u:0
 						})
 						break;
 					case "sniper":
@@ -1230,7 +1222,7 @@ statbar = function(){
 								xv:xv,
 								yv:yv,
 								u:0,
-								damage:gun.guntypes.sniper.damage
+								m:gun.guntypes.sniper.damage
 							})
 					break;
 					case "shotgun":
@@ -1278,24 +1270,12 @@ statbar = function(){
 							yv:yv,
 							u:0
 						})
+					
 						
-				}
-			env.gcd = 0
-		}
-		
+			}
+			}
 	});
-	
-	switch(env.gun){
-		case "pistol":
-			env.cgcd = gun.guntypes.pistol.cd		
-		break;
-		case "sniper":
-			env.cgcd = gun.guntypes.sniper.cd	
-		break;
-		case "shotgun":
-			env.cgcd = gun.guntypes.shotgun.cd
-		break;
-	}
+
 	window.addEventListener("mousemove", function (e) {
 
 		mouse.x = e.clientX-404
