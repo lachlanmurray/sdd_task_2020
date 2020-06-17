@@ -162,7 +162,6 @@ keypress = {
 };
 
 
-
 controller = function() {
 	env.dc += 1
 	if (keypress.up){ 																	
@@ -188,9 +187,6 @@ controller = function() {
 	}
 		if (env.xvel > 3.5){
 		env.xvel = 3.5
-	}
-	if (keypress.drop && env.gun != "fists"){
-		gun.drop()
 	}
 	
 if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
@@ -253,6 +249,9 @@ physics = function(){
 			}else{
 				env.y = 180	
 			}
+			if(room_load.denable != 1){
+				env.y = 180	
+			}
 		}else {
 			env.y = 180
 		}
@@ -264,6 +263,9 @@ physics = function(){
 					env.y = 445
 				}else if (env.y + env.yvel > 525){
 					env.y = 520
+				}
+				if(room_load.denable != 1){
+					env.x = 196
 				}
 			}else{
 				env.x = 196	
@@ -280,6 +282,9 @@ physics = function(){
 				}else if (env.x + env.xvel > 1135){
 					env.x = 1130
 				}
+				if(room_load.denable != 1){
+					env.y = context.canvas.height - env.height - 180
+				}
 			}else{
 				env.y = context.canvas.height - env.height - 180
 			}
@@ -294,6 +299,9 @@ physics = function(){
 					env.y = 445
 				}else if (env.y + env.yvel > 525){
 					env.y = 520
+				}
+				if(room_load.denable != 1){
+					env.x = context.canvas.width-env.width-180	
 				}
 			}else{
 				env.x = context.canvas.width-env.width-180	
@@ -314,8 +322,6 @@ physics = function(){
 	gun.checkdmg()
 	env.ccd+=1
 }
-
-
 
 
 collision = {
@@ -343,6 +349,15 @@ gun = {
 	collision:function(){
 			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x < 20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
 				gun.bullets.splice(i,1)
+				
+			}
+			if(gun.bullets[i].x > context.canvas.width-200 && gun.bullets[i].u == 4 || gun.bullets[i].y > context.canvas.height-200 && gun.bullets[i].u == 4){
+				gun.bullets.splice(i,1)
+				console.log("you just put a gun in lava, what did you expect")
+			}
+			if(gun.bullets[i].x < 200 && gun.bullets[i].u == 4 || gun.bullets[i].y < 200 && gun.bullets[i].u == 4){
+				gun.bullets.splice(i,1)
+				console.log("you just put a gun in lava, what did you expect")
 			}
 		
 	},
@@ -476,23 +491,34 @@ gun = {
 			cd:216
 		}
 	},
-	drop:function(){
-		env.gun="fists"
-		gun.bullets.push({
-			x:env.x+env.width*env.xvel*-1,
-			y:env.y+env.height*env.yvel*-1,
+	dropgun:function(x){
+		if(env.xvel >0.1 || env.yvel > 0.1){
+			
+			gun.bullets.push({
+			x:env.x+env.width*1.5*env.xvel*-1,
+			y:env.y+env.height/2*env.yvel*-1,
 			xv:0,
 			yv:0,
-			gun:"sniper",
+			gun:env.gun,
 			u:4
 		})
+		env.gun="fists"
+		}else {gun.bullets.push({
+			x:env.x+env.width*1.5,
+			y:env.y+env.height/2,
+			xv:0,
+			yv:0,
+			gun:env.gun,
+			u:4
+		})
+		env.gun="fists"
+			  }
 	},
-	pickup:function(gun,i){
+	pickup:function(whichgun,i){
 		if(env.gun != "fists"){
-			gun.drop()
+			gun.dropgun()
 		}
-		gun.bullets.splice(i,1)
-		env.gun = gun
+		env.gun = whichgun
 	}
 }
 	
@@ -566,7 +592,21 @@ render = function() {
 				}
 		}else if(gun.bullets[i].u == 3){
 				 context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 50,gun.bullets[i].x-(env.width/2),gun.bullets[i].y-(env.height/2),50,50);
-			}	else{
+			}else if(gun.bullets[i].gun){
+				var offset = 0
+				switch(gun.bullets[i].gun){
+					case "sniper":
+						offset = 1
+					break;
+					case "pistol":
+						offset = 0
+					break;
+					default:
+						offset = -1
+					break;
+				}
+				context.drawImage(img, 1800+(170*offset), 300, 170, 100,gun.bullets[i].x,gun.bullets[i].y,68,50);
+			}else{	
 				context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3);
 		}
 			
@@ -1384,9 +1424,6 @@ exbar = function(){
 		var xv = xdiff*sf
 		var yv = ydiff*sf
 		
-		env.xvel -= xv*0.1
-		env.yvel -= yv*0.1
-		
 		
 		switch(env.gun){
 			case "pistol":
@@ -1404,6 +1441,8 @@ exbar = function(){
 		}
 		
 			if(env.gcd < env.ccd){
+				env.xvel -= xv*0.1
+				env.yvel -= yv*0.1
 				env.ammoclip-=1
 				env.ccd = 0
 				switch(env.gun){
