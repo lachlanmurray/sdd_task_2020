@@ -1,8 +1,107 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns,exbar;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns,exbar,cheats;
 context = document.getElementById("canvas").getContext("2d");	// making the canvas to draw the game on.
 var ctx = document.getElementById("stats").getContext("2d");
 var ex 	= document.getElementById("ex").getContext("2d");
 var img = document.getElementById("map");
+
+cheats = {
+	nuke:function(){
+		Map.Monsters = []
+	},
+	steel:function(){
+		env.hp = 999999999*999999999999999999999*999999999999999999*99999999999
+	},
+	payday:function(){
+		env.coins = 9999
+	},
+	spawn:function(monster) {
+		var x
+		var y
+		var xv
+		var yv
+		var health
+		var speed
+		var timer
+		var timerc
+		var dmg
+		var size
+		var g
+		switch(monster){
+			case "stabby":
+				x = context.canvas.width/2
+				y = context.canvas.height/2
+				xv = 0
+				yv = 0
+				health = monstertypes.stabby.health
+				speed = monstertypes.stabby.speed
+				timer = monstertypes.stabby.timer
+				timerc = monstertypes.stabby.timerc
+				dmg = monstertypes.stabby.dmg
+				size = monstertypes.stabby.size
+				g = monstertypes.stabby.g
+			break;
+			case "shooty":
+				x = context.canvas.width/2
+				y = context.canvas.height/2
+				xv = 0
+				yv = 0
+				health = monstertypes.shooty.health
+				speed = monstertypes.shooty.speed
+				timer = monstertypes.shooty.timer
+				timerc = monstertypes.shooty.timerc
+				dmg = monstertypes.shooty.dmg
+				size = monstertypes.shooty.size
+				g = monstertypes.shooty.g
+			break;
+			case "tanky":
+				x = context.canvas.width/2
+				y = context.canvas.height/2
+				xv = 0
+				yv = 0
+				health = monstertypes.tanky.health
+				speed = monstertypes.tanky.speed
+				timer = monstertypes.tanky.timer
+				timerc = monstertypes.tanky.timerc
+				dmg = monstertypes.tanky.dmg
+				size = monstertypes.tanky.size
+				g = monstertypes.tanky.g
+			break;
+			case "speedy":
+				x = context.canvas.width/2
+				y = context.canvas.height/2
+				xv = 0
+				yv = 0
+				health = monstertypes.speedy.health
+				speed = monstertypes.speedy.speed
+				timer = monstertypes.speedy.timer
+				timerc = monstertypes.speedy.timerc
+				dmg = monstertypes.speedy.dmg
+				size = monstertypes.speedy.size
+				g = monstertypes.speedy.g
+			break;
+			default:
+				alert("could not spawn" + monster + "valid options are: speedy, tanky, shooty and tanky")
+			
+		}
+		
+		Map.Monsters.push({
+			x:x,
+			y:y,
+			xv:0,
+			yv:0,
+			health:health,
+			speed:speed,
+			timer:timer,
+			timerc:timerc,
+			dmg:dmg,
+			size:size,
+			g:g
+		})
+	}
+	
+}
+
+
 env = {
 	height:35,		//all of te propreties of the player cube **TODO** turn this into a hitbox when actual assets are made.
 	width:35,
@@ -19,10 +118,11 @@ env = {
 	debug:0,
 	animframe:0,
 	invuln:0,
-	gun:"sniper",
+	gun:"pistol",
 	coins:0,
 	gcd:0,
 	ccd:0,
+	ammoclip:0,
 };
 
 
@@ -53,10 +153,14 @@ keypress = {
 			case 16:// space key
 				keypress.dash = keydown;
 			break;
+			case 71:// space key
+				keypress.drop = keydown;
+			break;
 			
 		}
 	} // toggling them true or false, based on whether the keyevent listener sees an event matching the controls
 };
+
 
 
 controller = function() {
@@ -84,6 +188,9 @@ controller = function() {
 	}
 		if (env.xvel > 3.5){
 		env.xvel = 3.5
+	}
+	if (keypress.drop && env.gun != "fists"){
+		gun.drop()
 	}
 	
 if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
@@ -209,6 +316,8 @@ physics = function(){
 }
 
 
+
+
 collision = {
 	circle:function(r1,x1,y1,r2,x2,y2){
 
@@ -275,19 +384,6 @@ gun = {
 				env.coins+=1
 				gun.bullets.splice(i,1)
 			}
-		} //check if an anamy bullet hits the player
-		for(rm=0;rm<rmm.length;rm++){
-			Map.Monsters.splice(rmm[rm],1)
-			try{
-			Map.Monsters[m].health += 1
-			alert("did it")
-			}
-			catch(err){
-				
-			}
-			
-		}
-		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x,env.y,env.radius/4,context.canvas.width/2,context.canvas.height/2) && gun.bullets[i].u == 2){
 				alert("you win, loading new room")
 				env.y-=100
@@ -307,8 +403,24 @@ gun = {
 				World.branch();
 				room_load.loadnew(env.curroom)
 				Map.Monsters = []
+			}// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
+			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 4){
+				gun.pickup(gun.bullets[i].gun,i)
+				gun.bullets.splice(i,1) // take necessary stuff our and input into function rather than preserving bullet
 			}
-		}		// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
+		}
+		for(rm=0;rm<rmm.length;rm++){
+			Map.Monsters.splice(rmm[rm],1)
+			try{
+			Map.Monsters[m].health += 1
+			alert("did it")
+			}
+			catch(err){
+				
+			}
+			
+		}
+				
 		
 		
 		
@@ -326,7 +438,7 @@ gun = {
 			xp:0,		//explosive, explosion radius
 			xpr:-1,		//explosion radius
 			pc:0,		//peircing ( can go through multiple enemies)
-			bounce:0	// bounces off of walls instead of being destroyed
+			bounce:0,	// bounces off of walls instead of being destroyed
 		},
 		pistol:{
 			damage:1,
@@ -363,9 +475,27 @@ gun = {
 			xpr:50,
 			cd:216
 		}
+	},
+	drop:function(){
+		env.gun="fists"
+		gun.bullets.push({
+			x:env.x+env.width*env.xvel*-1,
+			y:env.y+env.height*env.yvel*-1,
+			xv:0,
+			yv:0,
+			gun:"sniper",
+			u:4
+		})
+	},
+	pickup:function(gun,i){
+		if(env.gun != "fists"){
+			gun.drop()
+		}
+		gun.bullets.splice(i,1)
+		env.gun = gun
 	}
 }
-
+	
 
 Map = {
 	map: [0 ,2 ,2 ,2 ,2 ,1, 2, 2, 2, 2, 3,
@@ -387,6 +517,7 @@ Map = {
 
 render = function() {
 	statbar();
+	exbar();
 	context.clearRect(0, 0, canvas.width, canvas.height);	// clear the canvas			
 
 	img = document.getElementById("map").src;
@@ -924,6 +1055,14 @@ room_load = {
 				break;
 					
 			}
+			for (i=0;i<Map.Monsters.length;i++){
+				if(Map.Monsters[i].x == x){
+					x+=30
+				}
+				if(Map.Monsters[i].y == y){
+					y+=30
+				}
+			}
 		Map.Monsters.push({
 			x:x,
 			y:y,
@@ -1059,7 +1198,7 @@ World = { // middle square method
 		World.printworld()
 	},
 	
-	seed:6969,
+	seed:1234,
 	
 	rooms:[
 			0,0,0,0,0,0,0,0,0,
@@ -1158,9 +1297,70 @@ statbar = function(){
 	}
 }
 
+
 exbar = function(){
+	var offset = 0
+	switch(env.gun){
+		case "pistol":
+			offset = 0
+		break;
+		case "sniper":
+			offset = 1
+		break;
+		default:
+			offset = -1
+		break;
+	}
 	var img = document.getElementById("map");
-	ex.drawImage(img, 804, 0, 202, 488,0,0,403,976);
+	var reset = 0
+	if (env.ccd > env.gcd){
+		reset = 0
+	}else{
+		reset = env.ccd/env.gcd
+	}
+	ex.drawImage(img, 804, 478, 1450, 255,0,0,2570,300);
+	ex.drawImage(img, 1800+(170*offset), 300, 170, 100,700,50,340,250);
+	ex.drawImage(img, 1800+(170*offset), 300+(50*reset), 170, 100,700,50+(125*reset),340,250);
+	var ammo = env.ammoclip.toString()
+	var ammo2 = ammo.split("")
+	
+	for(i=0;i<ammo2.length;i++){
+	switch(ammo2[i]){
+		case "1":
+			ex.drawImage(img, 1798, 0, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "2":
+			ex.drawImage(img, 1898, 0, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "3":
+			ex.drawImage(img, 1998, 0, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "4":
+			ex.drawImage(img, 2098, 0, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "5":
+			ex.drawImage(img, 2198, 0, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "6":
+			ex.drawImage(img, 1798, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "7":
+			ex.drawImage(img, 1898, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "8":
+			ex.drawImage(img, 1998, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "9":
+			ex.drawImage(img, 2098, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+		case "0":
+			ex.drawImage(img, 2198, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+		default:
+			ex.drawImage(img, 2198, 110, 100, 96,500+(87*i),75,75,72);
+		break;
+	}
+	}
 }
 
 
@@ -1187,6 +1387,7 @@ exbar = function(){
 		env.xvel -= xv*0.1
 		env.yvel -= yv*0.1
 		
+		
 		switch(env.gun){
 			case "pistol":
 				env.gcd = gun.guntypes.pistol.cd
@@ -1203,22 +1404,24 @@ exbar = function(){
 		}
 		
 			if(env.gcd < env.ccd){
+				env.ammoclip-=1
 				env.ccd = 0
 				switch(env.gun){
 					case "pistol":
 						gun.bullets.push({
-							x:env.x,
-							y:env.y,
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
 							xv:xv,
 							yv:yv,
-							u:0
+							u:0,
+							m:gun.guntypes.pistol.damage
 						})
 						break;
 					case "sniper":
 							console.log(gun.bullets)
 							gun.bullets.push({
-								x:env.x,
-								y:env.y,
+								x:env.x+(env.width/2),
+								y:env.y+(env.height/2),
 								xv:xv,
 								yv:yv,
 								u:0,
@@ -1229,8 +1432,8 @@ exbar = function(){
 						for(i=0;i<gun.guntypes.shotgun.pellets;i++){
 							console.log(i)
 						gun.bullets.push({
-							x:env.x,
-							y:env.y,
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
 							xv:xv,
 							yv:yv,
 							u:0,
@@ -1241,8 +1444,8 @@ exbar = function(){
 					case "flakCannon":
 						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
 						gun.bullets.push({
-							x:env.x,
-							y:env.y,
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
 							xv:xv*Math.sin(gun.guntypes.shotgun.ospa/i),
 							yv:yv*Math.sin(i/gun.guntypes.shotgun.ospa),
 							u:0,
@@ -1253,8 +1456,8 @@ exbar = function(){
 					case "rocketLauncher":
 						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
 						gun.bullets.push({
-							x:env.x,
-							y:env.y,
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
 							xv:xv,
 							yv:yv,
 							u:0,
@@ -1264,8 +1467,8 @@ exbar = function(){
 					break;
 					default:
 						gun.bullets.push({
-							x:env.x,
-							y:env.y,
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
 							xv:xv,
 							yv:yv,
 							u:0
