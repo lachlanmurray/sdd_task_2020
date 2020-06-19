@@ -9,7 +9,7 @@ cheats = {
 		Map.Monsters = []
 	},
 	steel:function(){
-		env.hp = 999999999*999999999999999999999*999999999999999999*99999999999
+		env.hp = 9^env.hp^env.hp^env.hp^env.hp^env.hp^env.hp
 	},
 	payday:function(){
 		env.coins = 9999
@@ -122,7 +122,9 @@ env = {
 	coins:0,
 	gcd:0,
 	ccd:0,
-	ammoclip:0,
+	ammoclip:20,
+	spare:47,
+	cap:0
 };
 
 
@@ -346,6 +348,7 @@ collision = {
 gun = {
 	bullets:[],
 	velocity:5,
+	reloadt:0,
 	collision:function(){
 			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x < 20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
 				gun.bullets.splice(i,1)
@@ -379,6 +382,13 @@ gun = {
 							xv:Map.Monsters[m].xv*Math.random(-1,1)*5,
 							yv:Map.Monsters[m].yv*Math.random(-1,1)*5,
 							u:3
+						})
+						gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*5,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*5,
+							u:5
 						})
 						}
 						rmm.push(m)
@@ -420,19 +430,23 @@ gun = {
 				Map.Monsters = []
 			}// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
 			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 4){
-				gun.pickup(gun.bullets[i].gun,i)
+				if(gun.bullets[i].clip){
+					var clip = gun.bullets[i].clip
+				}else{
+					var clip = env.cap
+				}
+				gun.pickup(gun.bullets[i].gun,clip)
 				gun.bullets.splice(i,1) // take necessary stuff our and input into function rather than preserving bullet
 			}
+			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 5){
+				gun.spare += 20
+			}
 		}
+		if(env.ammoclip > env.cap && env.invuln > 1){
+				env.ammoclip = env.cap
+			}
 		for(rm=0;rm<rmm.length;rm++){
 			Map.Monsters.splice(rmm[rm],1)
-			try{
-			Map.Monsters[m].health += 1
-			alert("did it")
-			}
-			catch(err){
-				
-			}
 			
 		}
 				
@@ -458,13 +472,15 @@ gun = {
 		pistol:{
 			damage:1,
 			sprite:1,
-			cd:18
+			cd:18,
+			cap:20,
 		},
 		sniper:{
 			damage:50,
 			sprite:2,
 			pc:1,
-			cd:72
+			cd:72,
+			cap:5,
 		},
 		shotgun:{
 			damage:0.5,
@@ -500,7 +516,8 @@ gun = {
 			xv:0,
 			yv:0,
 			gun:env.gun,
-			u:4
+			u:4,
+			clip:env.ammoclip
 		})
 		env.gun="fists"
 		}else {gun.bullets.push({
@@ -509,17 +526,33 @@ gun = {
 			xv:0,
 			yv:0,
 			gun:env.gun,
-			u:4
+			u:4,
+			clip:env.ammoclip
 		})
 		env.gun="fists"
 			  }
 	},
-	pickup:function(whichgun,i){
+	pickup:function(whichgun,clip){
 		if(env.gun != "fists"){
 			gun.dropgun()
 		}
+		env.ammoclip = clip
 		env.gun = whichgun
-	}
+		
+	},
+	reload:function(){
+		setTimeout(function(){
+			gun.reloadt = 0
+			if(env.spare > env.cap){
+				env.ammoclip = env.cap
+				env.spare -= env.cap
+			}else{
+				env.ammoclip = env.spare
+				env.spare = 0
+			}
+			console.log("reloaded")
+		},env.gcd*20)
+	},
 }
 	
 
@@ -1037,6 +1070,19 @@ room_load = {
 				console.log("travelled")
 				return;
 			}
+			if (roomid == 3){
+				console.log("Shop room")
+				gun.bullets.push({
+					x:context.canvas.width/2,
+					y:context.canvas.height/2,
+					xv:0,
+					yv:0,
+					gun:"sniper",
+					u:4,
+					clip:5
+		})
+				return;
+			}
 			if (roomid == 2){
 				console.log("boss room")
 				gun.bullets.push({
@@ -1231,6 +1277,9 @@ World = { // middle square method
 					World.rooms[index] = 2
 				}
 			}
+			if(World.rooms[index] >= 2200 && World.rooms[index] <= 2650 ){
+				World.rooms[index] = 3
+			}
 			
 			
 		}
@@ -1358,6 +1407,9 @@ exbar = function(){
 	}else{
 		reset = env.ccd/env.gcd
 	}
+	if (gun.reloadt == 1){
+		reset = 1
+	}
 	ex.drawImage(img, 804, 478, 1450, 255,0,0,2570,300);
 	ex.drawImage(img, 1800+(170*offset), 300, 170, 100,700,50,340,250);
 	ex.drawImage(img, 1800+(170*offset), 300+(50*reset), 170, 100,700,50+(125*reset),340,250);
@@ -1401,6 +1453,47 @@ exbar = function(){
 		break;
 	}
 	}
+	
+	var spare = env.spare.toString()
+	var spare2 = spare.split("")
+	
+	for(i=0;i<spare2.length;i++){
+	switch(spare2[i]){
+		case "1":
+			ex.drawImage(img, 1798, 0, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "2":
+			ex.drawImage(img, 1898, 0, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "3":
+			ex.drawImage(img, 1998, 0, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "4":
+			ex.drawImage(img, 2098, 0, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "5":
+			ex.drawImage(img, 2198, 0, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "6":
+			ex.drawImage(img, 1798, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "7":
+			ex.drawImage(img, 1898, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "8":
+			ex.drawImage(img, 1998, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "9":
+			ex.drawImage(img, 2098, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		case "0":
+			ex.drawImage(img, 2198, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+		default:
+			ex.drawImage(img, 2198, 110, 100, 96,400+(29*i),110,30,28.8);
+		break;
+	}
+	}
 }
 
 
@@ -1428,19 +1521,23 @@ exbar = function(){
 		switch(env.gun){
 			case "pistol":
 				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
 			break;
 			case "sniper":
 				env.gcd = gun.guntypes.sniper.cd
+				env.cap = gun.guntypes.sniper.cap
 			break;
 			case "shotgun":
 				env.gcd = gun.guntypes.shotgun.cd
+				env.cap = gun.guntypes.shotgun.cap
 			break;
 			default:
 				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
 			break;
 		}
 		
-			if(env.gcd < env.ccd){
+			if(env.gcd < env.ccd && env.ammoclip >=1 && gun.reloadt == 0){
 				env.xvel -= xv*0.1
 				env.yvel -= yv*0.1
 				env.ammoclip-=1
@@ -1515,7 +1612,18 @@ exbar = function(){
 					
 						
 			}
+			}else if (env.ammoclip == 0 && gun.reloadt != 1){
+				gun.reloadt = 1
+				if(env.spare !=0){
+				gun.reload()
+				}
+					  }
+			if(gun.reloadt == 1 && env.ammoclip > 0){
+				gun.reloadt = 0
 			}
+			
+			
+		
 	});
 
 	window.addEventListener("mousemove", function (e) {
