@@ -1,4 +1,4 @@
-var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns,exbar,cheats;
+var context, keypress, env, loop, controller, physics, render, mouse, Map, windowsz, World, room_load,gun, monstertypes, colliision,statbar,guns,exbar,cheats, bossprofiles;
 context = document.getElementById("canvas").getContext("2d");	// making the canvas to draw the game on.
 var ctx = document.getElementById("stats").getContext("2d");
 var ex 	= document.getElementById("ex").getContext("2d");
@@ -79,6 +79,19 @@ cheats = {
 				size = monstertypes.speedy.size
 				g = monstertypes.speedy.g
 			break;
+			case "demonLord":
+				x = context.canvas.width/2
+				y = context.canvas.height/2
+				xv = 0
+				yv = 0
+				health = bossprofiles.demonLord.stats.health
+				speed = bossprofiles.demonLord.stats.speed
+				timer = bossprofiles.demonLord.stats.timer
+				timerc = bossprofiles.demonLord.stats.timerc
+				dmg = bossprofiles.demonLord.stats.dmg
+				size = bossprofiles.demonLord.stats.size
+				g = bossprofiles.demonLord.stats.g
+			break;
 			default:
 				alert("could not spawn" + monster + "valid options are: speedy, tanky, shooty and tanky")
 			
@@ -122,8 +135,8 @@ env = {
 	coins:0,
 	gcd:0,
 	ccd:0,
-	ammoclip:20,
-	spare:47,
+	ammoclip:0,
+	spare:40,
 	cap:0
 };
 
@@ -155,8 +168,8 @@ keypress = {
 			case 16:// space key
 				keypress.dash = keydown;
 			break;
-			case 71:// space key
-				keypress.drop = keydown;
+			case 82:// space key
+				keypress.reload = keydown;
 			break;
 			
 		}
@@ -191,11 +204,14 @@ controller = function() {
 		env.xvel = 3.5
 	}
 	
-if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
-	env.xvel *= 0.9
-	env.yvel *= 0.9
-}
+	if ((env.xvel*env.xvel) + env.yvel*env.yvel >= 10){
+		env.xvel *= 0.9
+		env.yvel *= 0.9
+	}
 	
+	if(keypress.reload){
+		gun.reload()
+	}
 };
 
 
@@ -352,7 +368,6 @@ gun = {
 	collision:function(){
 			if(gun.bullets[i].x > context.canvas.width-20 || gun.bullets[i].x < 20 || gun.bullets[i].y > context.canvas.height-20 || gun.bullets[i].y < 20){
 				gun.bullets.splice(i,1)
-				
 			}
 			if(gun.bullets[i].x > context.canvas.width-200 && gun.bullets[i].u == 4 || gun.bullets[i].y > context.canvas.height-200 && gun.bullets[i].u == 4){
 				gun.bullets.splice(i,1)
@@ -369,10 +384,16 @@ gun = {
 		var rmm = []
 		for(m=0;m<Map.Monsters.length;m++){
 			for(b=0;b<gun.bullets.length;b++){
-				
 				if(collision.circle(Map.Monsters[m].size*30,Map.Monsters[m].x,Map.Monsters[m].y,env.radius/3,gun.bullets[b].x,gun.bullets[b].y) && gun.bullets[b].u == 0){
-					Map.Monsters[m].health -= 1 * gun.bullets[b].m
-					rmb.push(b)
+					Map.Monsters[m].health -= gun.bullets[b].m
+					if(gun.bullets[b].sp){									// if it is explosive and its timer isnt done yet, set the bullet as about to explode and set its sp to -2 so it is deleted next frame
+						if(gun.bullets[b].sp<gun.bullets[b].msp){
+							gun.bullets[b].sp = gun.bullets[b].msp -3
+							//alert("1")
+						}
+					}else{
+							gun.bullets.splice(b,1)
+						}
 					if(Map.Monsters[m].health <= 0){
 						var temp = Math.round(Math.random(0,7))
 						for(i=0;i<=temp;i++){
@@ -383,30 +404,174 @@ gun = {
 							yv:Map.Monsters[m].yv*Math.random(-1,1)*5,
 							u:3
 						})
-						gun.bullets.push({
+						switch(Math.round(env.spare/20)*20){
+							case 0:
+							gun.bullets.push({
 							x:Map.Monsters[m].x,
 							y:Map.Monsters[m].y,
-							xv:Map.Monsters[m].xv*Math.random(-1,1)*5,
-							yv:Map.Monsters[m].yv*Math.random(-1,1)*5,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
 							u:5
 						})
+							break;
+							case 20:
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							break;
+							case 40:
+							if(Math.random() < 0.4){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 60:
+							if(Math.random() < 0.2){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 80:
+							if(Math.random() < 0.15){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 100:
+							if(Math.random() < 0.07){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 120:
+							if(Math.random() < 0.05){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 140:
+							if(Math.random() < 0.04){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 160:
+							if(Math.random() < 0.03){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 180:
+							if(Math.random() < 0.02){
+							gun.bullets.push({
+							x:Map.Monsters[m].x,
+							y:Map.Monsters[m].y,
+							xv:Map.Monsters[m].xv*Math.random(-1,1)*2,
+							yv:Map.Monsters[m].yv*Math.random(-1,1)*2,
+							u:5
+						})
+							}
+							break;
+							case 200:
+							env.ammoclip = 200
+
+							break;
+						}
+							
+						
+						
 						}
 						rmm.push(m)
-					}
+						break;
+					} // spawn coins and ammo when they die
 				}
 			}
 		}	// check if player bullet his enemy
-		for(rb=0;rb<rmb.length;rb++){
-			gun.bullets.splice(rmb[rb],1)
-		}
+		
 		for(i=0;i<gun.bullets.length;i++){
 			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 1){
 				env.xvel+= gun.bullets[i].xv
 				env.yvel+= gun.bullets[i].yv
+				
+				if(gun.bullets[i].heal && env.coins > 0 && World.rooms[env.curroom] == 3){
+					env.hp += gun.bullets[i].heal
+					if(gun.bullets[i].cost){
+						env.coins -= gun.bullets[i].cost
+					}
+					setTimeout(function(){
+						gun.bullets.push({
+						x:context.canvas.width*0.755,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						u:1,
+						cost:1,
+						heal:1,
+					})
+				},300)
+				}else if(env.coins == 0 && World.rooms[env.curroom] == 3){
+					env.xvel*= -3
+					env.yvel*= -3
+					setTimeout(function(){
+						gun.bullets.push({
+						x:context.canvas.width*0.755,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						u:1,
+						cost:1,
+						heal:1,
+					})
+				},150)
+				}
+				else{
+					env.hp -= 1
+				}
 				gun.bullets.splice(i,1)
-				env.hp -= 1
 			} else if (collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 3){
 				env.coins+=1
+				gun.bullets.splice(i,1)
+			} else if (collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 5){
+				env.spare += 10
 				gun.bullets.splice(i,1)
 			}
 			if(collision.circle(env.radius,env.x,env.y,env.radius/4,context.canvas.width/2,context.canvas.height/2) && gun.bullets[i].u == 2){
@@ -430,50 +595,62 @@ gun = {
 				Map.Monsters = []
 			}// using a bullet as a pseudo warp point in the middle of a room on defeat of the boss to load in a new room
 			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 4){
-				if(gun.bullets[i].clip){
-					var clip = gun.bullets[i].clip
-				}else{
-					var clip = env.cap
-				}
+				if(gun.bullets[i].cost && gun.reloadt != 1){
+					if(env.coins >= gun.bullets[i].cost){
+						var clip = gun.bullets[i].clip
 				gun.pickup(gun.bullets[i].gun,clip)
+				env.coins -= gun.bullets[i].cost
 				gun.bullets.splice(i,1) // take necessary stuff our and input into function rather than preserving bullet
 			}
-			if(collision.circle(env.radius,env.x+(env.width/2),env.y+(env.height/2),env.radius/2,gun.bullets[i].x,gun.bullets[i].y) && gun.bullets[i].u == 5){
-				gun.spare += 20
-			}
+				}else{
+					if(gun.bullets[i].clip && gun.reloadt != 1){
+					var clip = gun.bullets[i].clip
+					}else{
+					var clip = env.cap
+					}
+					gun.pickup(gun.bullets[i].gun,clip)
+					gun.bullets.splice(i,1) // take necessary stuff our and input into function rather than preserving bullet
+				}
+				}
+				
 		}
 		if(env.ammoclip > env.cap && env.invuln > 1){
 				env.ammoclip = env.cap
 			}
 		for(rm=0;rm<rmm.length;rm++){
 			Map.Monsters.splice(rmm[rm],1)
-			
 		}
 				
 		
 		
-		
+		if(env.spare > 200){
+			env.spare = 200
+		}
+		if(env.ammoclip > env.cap){
+			env.ammoclip = env.cap
+		}
 	},
 	guntypes:{
+		nguns:4,
 		template:{
 			damage:1,
 			cd:0, 		// how long(in frames, 144/s, untill you can fire again)
 			sprite:0,	//its sprite index
-			osp:0,		//origin spread (like a shotgun)
-			ospa:-1,	//origin spread angle
-			sp:0,		// spread(like the tank's bullets)
+			spa:-1,	//origin spread angle
+			sp:0,		// spread
 			spt:-1,		//spread time, how long after shooting do they spread
 			spa:-1,		//spread angle
 			xp:0,		//explosive, explosion radius
 			xpr:-1,		//explosion radius
 			pc:0,		//peircing ( can go through multiple enemies)
-			bounce:0,	// bounces off of walls instead of being destroyed
 		},
 		pistol:{
 			damage:1,
 			sprite:1,
 			cd:18,
 			cap:20,
+			shopprice:10,
+			cap:20
 		},
 		sniper:{
 			damage:50,
@@ -481,14 +658,18 @@ gun = {
 			pc:1,
 			cd:72,
 			cap:5,
+			shopprice:30,
+			cap:5
 		},
 		shotgun:{
-			damage:0.5,
+			damage:1,
 			sprite:3,
 			osp:1,		
 			ospa:30,
-			pellets:6,
-			cd:58
+			pellets:9,
+			cd:58,
+			shopprice:20,
+			cap:7
 		},
 		flakCannon:{
 			damage:0.5,
@@ -496,15 +677,20 @@ gun = {
 			sp:1,
 			spt:0.5,
 			spa:30,
-			pellets:2,
-			cd:58
+			pellets:1,
+			cd:58,
+			cap:1
 		},
 		rocketLauncher:{
-			damage:5,
+			damage:0.3,
+			rocketDamage:4,
 			sprite:5,
 			xp:1,
-			xpr:50,
-			cd:216
+			xpr:20,
+			cd:120,
+			cap:1,
+			shopprice:30,
+			pc:1,		
 		}
 	},
 	dropgun:function(x){
@@ -536,24 +722,53 @@ gun = {
 		if(env.gun != "fists"){
 			gun.dropgun()
 		}
-		env.ammoclip = clip
 		env.gun = whichgun
+		switch(env.gun){
+			case "pistol":
+				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
+			break;
+			case "sniper":
+				env.gcd = gun.guntypes.sniper.cd
+				env.cap = gun.guntypes.sniper.cap
+			break;
+			case "shotgun":
+				env.gcd = gun.guntypes.shotgun.cd
+				env.cap = gun.guntypes.shotgun.cap
+			break;
+			case "rocketLauncher":
+				env.gcd = gun.guntypes.rocketLauncher.cd
+				env.cap = gun.guntypes.rocketLauncher.cap
+			break;
+			default:
+				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
+			break;
+		}
 		
+		env.ammoclip = clip
 	},
 	reload:function(){
+		
+		
+		var check = env.gun
 		setTimeout(function(){
-			gun.reloadt = 0
-			if(env.spare > env.cap){
+			if(env.gun == check){
+			if(env.spare >= env.cap){
+				env.spare -= env.cap - env.ammoclip
 				env.ammoclip = env.cap
-				env.spare -= env.cap
-			}else{
-				env.ammoclip = env.spare
+			}else if (env.spare < env.cap - env.ammoclip){
+				env.ammoclip = env.ammoclip + env.spare
 				env.spare = 0
+			}else if (env.spare + env.ammoclip >= env.cap){
+				env.spare -= env.cap - env.ammoclip
+				env.ammoclip = env.cap
 			}
-			console.log("reloaded")
-		},env.gcd*20)
-	},
-}
+				gun.reloadt = 0
+			}
+		},env.gcd*19)
+	
+},}
 	
 
 Map = {
@@ -599,32 +814,59 @@ render = function() {
 	for(i=0;i<gun.bullets.length;i++){
 		if(gun.bullets[i].sp){
 				gun.bullets[i].sp +=1
+
+			
+			
+				if(gun.bullets[i].decay < gun.guntypes.rocketLauncher.xpr*0.6){
+					gun.bullets[i].decay+=1
+				}else if (gun.bullets[i].decay == gun.guntypes.rocketLauncher.xpr){
+					gun.bullets.splice(i,1)
+				}else if(gun.bullets[i].decay >= gun.guntypes.rocketLauncher.xpr*0.6){
+					gun.bullets[i].xv = 0
+					gun.bullets[i].yv = 0
+					gun.bullets[i].decay+=1
+				}
+				
 				if(gun.bullets[i].xv > 0){
 					context.drawImage(img,0,1403,63,52,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width,env.height);
 				}else{
 					context.drawImage(img,70,1403,63,52,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width,env.height);
 				}
+			
+				var explode = 0
+				for(m=-1;m<Map.Monsters.length;m=m+1){
+				if(Math.round(gun.bullets[i].sp) == Math.round(gun.bullets[i].msp)){
+					explode = 1
+				}
 				
-				if(gun.bullets[i].sp == 144){
-					for (i=0;i<12;i++){
-					var xvmod = Math.sin(360+(30*i))
-					var yvmod = Math.cos(360+(30*i))
-					var xg = parseInt(gun.bullets[i].x.toString())
-					var yg = parseInt(gun.bullets[i].y.toString())
-					var xx = xvmod * 5
-					var yy = yvmod * 5
+				}
+					
+					if(explode == 1){
+					for(x=0;x<5;x++){
+					var xvmod = Math.sin(90-(5*x))
+					var yvmod = Math.cos(90-(5*x))
+					var xg = gun.bullets[i].x
+					var yg = gun.bullets[i].y
+					var xx = xvmod * 7
+					var yy = yvmod * 7
 					gun.bullets.push({
 						x:xg,
 						y:yg,
 						xv:xx,
 						yv:yy,
-						u:1
+						u:0,
+						m:gun.guntypes.rocketLauncher.damage,
+						sp:100,
+						decay:0
 					})
-				
+						context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3)
+						
 					}
-				}
+					gun.bullets.splice(i,1)
+					}
+				
 		}else if(gun.bullets[i].u == 3){
-				 context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 50,gun.bullets[i].x-(env.width/2),gun.bullets[i].y-(env.height/2),50,50);
+				 context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 50,gun.bullets[i].x-(env.width/2),gun.bullets[i].y-(env.height/2),25,25);
 			}else if(gun.bullets[i].gun){
 				var offset = 0
 				switch(gun.bullets[i].gun){
@@ -638,10 +880,109 @@ render = function() {
 						offset = -1
 					break;
 				}
-				context.drawImage(img, 1800+(170*offset), 300, 170, 100,gun.bullets[i].x,gun.bullets[i].y,68,50);
-			}else{	
-				context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3);
-		}
+				context.drawImage(img, 1800+(170*offset), 300, 170, 100,gun.bullets[i].x-25,gun.bullets[i].y-15,68,50);
+				context.drawImage(img, 1800+(170*offset), 300, 170, 100,gun.bullets[i].x-25,gun.bullets[i].y-15,68,50);
+				
+				if(gun.bullets[i].cost){
+					
+				var c = gun.bullets[i].cost.toString()
+				var c2 = c.split("")
+				for(f=0;f<c2.length;f++){
+				switch(c2[f]){
+					case "1":
+						context.drawImage(img, 1798, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "2":
+						context.drawImage(img, 1898, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "3":
+						context.drawImage(img, 1998, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "4":
+						context.drawImage(img, 2098, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "5":
+						context.drawImage(img, 2198, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "6":
+						context.drawImage(img, 1798, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "7":
+						context.drawImage(img, 1898, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "8":
+						context.drawImage(img, 1998, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "9":
+						context.drawImage(img, 2098, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "0":
+						context.drawImage(img, 2198, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					default:
+						context.drawImage(img, 2198, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+	
+	}
+					context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 60,gun.bullets[i].x-30,gun.bullets[i].y-40,20,20);
+				}
+				}
+				
+			}else if(gun.bullets[i].u == 5){
+				context.drawImage(img, 1739, 226, 60, 50,gun.bullets[i].x-(env.width/2),gun.bullets[i].y-(env.height/2),25,25);
+			}
+			else if(gun.bullets[i].u == 6){
+				context.drawImage(img, 1654, 226, 75, 50,gun.bullets[i].x-37,gun.bullets[i].y-25,110,50);
+				}
+			
+			else{	
+				if (gun.bullets[i].xv == 0 && gun.bullets[i].cost){
+					context.drawImage(img,1580,229,70,50,gun.bullets[i].x-30,gun.bullets[i].y-20,70,50);
+				var c = gun.bullets[i].cost.toString()
+				var c2 = c.split("")
+				for(f=0;f<c2.length;f++){
+				switch(c2[f]){
+					case "1":
+						context.drawImage(img, 1798, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "2":
+						context.drawImage(img, 1898, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "3":
+						context.drawImage(img, 1998, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "4":
+						context.drawImage(img, 2098, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "5":
+						context.drawImage(img, 2198, 0, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "6":
+						context.drawImage(img, 1798, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "7":
+						context.drawImage(img, 1898, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "8":
+						context.drawImage(img, 1998, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "9":
+						context.drawImage(img, 2098, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					case "0":
+						context.drawImage(img, 2198, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+					default:
+						context.drawImage(img, 2198, 110, 100, 96,gun.bullets[i].x+(20*f),gun.bullets[i].y-40,20,19);
+						break;
+	
+	}
+					context.drawImage(img, 1805 + (50*Math.round(env.animframe*2)), 228, 45, 60,gun.bullets[i].x-30,gun.bullets[i].y-40,20,20);
+				}
+				}else{
+					context.drawImage(img,0,1490+(23*Math.round(env.animframe)),27,23,gun.bullets[i].x-(env.width/6.5),gun.bullets[i].y-(env.height/6.5),env.width/3,env.width/3)
+				}
+			}
 			
 			if(env.debug == 1){
 			context.fillStyle = "#0000ff";							// make it draw in red
@@ -649,6 +990,7 @@ render = function() {
 			context.arc(gun.bullets[i].x,gun.bullets[i].y,env.height/10,0,Math.PI*2,true)			// use the descriptors in env (the player) to draw the object
 			context.fill();
 			} // debug code
+			
 			if(gun.bullets[i].u != 3){
 			gun.bullets[i].x += gun.bullets[i].xv
 			gun.bullets[i].y += gun.bullets[i].yv
@@ -658,6 +1000,13 @@ render = function() {
 				gun.bullets[i].x += gun.bullets[i].xv
 				gun.bullets[i].y += gun.bullets[i].yv
 			}
+			if (gun.bullets[i].u == 5){
+				gun.bullets[i].xv *= 0.94
+				gun.bullets[i].yv *= 0.94
+				gun.bullets[i].x += gun.bullets[i].xv
+				gun.bullets[i].y += gun.bullets[i].yv
+			}
+		
 			gun.collision();
 		}
 	
@@ -698,6 +1047,16 @@ render = function() {
 						context.drawImage(img,0,795+(146*Math.round(env.animframe)),135,145,Map.Monsters[f].x-Map.Monsters[f].size*32,Map.Monsters[f].y-Map.Monsters[f].size*32,64*Map.Monsters[f].size,64*Map.Monsters[f].size);
 					}
 				break;
+				case 4:
+					context.drawImage(img,260,800+(142*(Math.round(env.animframe*4)%4)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*50,Map.Monsters[f].y-Map.Monsters[f].size*80,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+				break;
+				default:
+					if(Map.Monsters[f].timerc > 60){
+						context.drawImage(img,155,800+(142*Math.round(env.animframe)),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					} else{
+						context.drawImage(img,155,800+(142*4),128,128,Map.Monsters[f].x-Map.Monsters[f].size*64,Map.Monsters[f].y-Map.Monsters[f].size*64,128*Map.Monsters[f].size,128*Map.Monsters[f].size);
+					}
+					break;
 			}
 			var xd = (env.x+env.width/2)-Map.Monsters[f].x
 			var yd = (env.y+env.height/2)-Map.Monsters[f].y
@@ -719,7 +1078,7 @@ render = function() {
 		//Ranged monster attack if timer is done
 			if(Map.Monsters[f].timerc == Map.Monsters[f].timer || Map.Monsters[f].timerc == Map.Monsters[f].timer -20 || Map.Monsters[f].timerc == Map.Monsters[f].timer -40){
 				if(Map.Monsters[f].g == 2){
-					//for (i=0;i<6;i++){
+					
 					if(env.x >= Map.Monsters[f].x){
 						var xx = gun.velocity
 						var yy = 0
@@ -729,7 +1088,7 @@ render = function() {
 					}
 					var xg = parseInt(Map.Monsters[f].x.toString())
 					var yg = parseInt(Map.Monsters[f].y.toString())
-					//}
+					
 					if(Map.Monsters[f].timerc == Map.Monsters[f].timerc){
 					   gun.bullets.push({
 						x:xg,
@@ -741,7 +1100,7 @@ render = function() {
 					})
 					   }
 				}
-				if(Map.Monsters[f].g == 1){
+				else if(Map.Monsters[f].g == 1){
 				Map.Monsters[f].x -= Map.Monsters[f].xv
 				Map.Monsters[f].y -= Map.Monsters[f].yv
 				var shootlist = []
@@ -749,6 +1108,21 @@ render = function() {
 					if(Map.Monsters[n].g == 1){
 					shootlist.push(n)
 					}
+				}}
+				else if(Map.Monsters[f].g == 3){
+					
+				if(Map.Monsters[f].timer == Map.Monsters[f].timerc){
+				//	alert("shoot")
+					var behaviour = World.gen()
+					
+					Map.Monsters[f].timerc = 0
+				}//behaviour for lich king (g==3)
+				}
+				if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
+				Map.Monsters[f].timerc = 0
+				}
+				if(Map.Monsters[f].g == 2){
+					Map.Monsters[f].speed = 0.8
 				}
 				for (g=0;g<shootlist.length;g++){
 				for (i=0;i<6;i++){
@@ -769,16 +1143,10 @@ render = function() {
 				}
 				}
 					
-				}
-				if(Map.Monsters[f].timerc == Map.Monsters[f].timer){
-				Map.Monsters[f].timerc = 0
-				}
 				if(Map.Monsters[f].g ==1){
 				Map.Monsters[f].speed = 0
 				}
-				if(Map.Monsters[f].g == 2){
-					Map.Monsters[f].speed = 0.8
-				}
+				
 			}
 			else if(Map.Monsters[f].g ==1){
 							Map.Monsters[f].speed += 0.004
@@ -801,8 +1169,8 @@ render = function() {
 						Map.Monsters[f].x -= Map.Monsters[f].xv *0.5
 						Map.Monsters[f].y -= Map.Monsters[f].yv *0.5
 					}else{
-						Map.Monsters[f].x -= Map.Monsters[f].xv 
-						Map.Monsters[f].y -= Map.Monsters[f].yv 
+						Map.Monsters[f].x -= Map.Monsters[f].xv *0.95
+						Map.Monsters[f].y -= Map.Monsters[f].yv *0.95*Math.random()
 					}
 				}
 			} // Monster self collision
@@ -824,33 +1192,37 @@ render = function() {
 				
 				}
 			context.fillStyle = "#00FF00";
-			context.fillRect(Map.Monsters[f].x - (((Map.Monsters[f].size*32)*Map.Monsters[f].health)/2), Map.Monsters[f].y - Map.Monsters[f].size *60, (Map.Monsters[f].size*32)*Map.Monsters[f].health,4);
+			if(Map.Monsters[f].g !=3 && Map.Monsters[f].g !=4){
+				context.fillRect(Map.Monsters[f].x - (((Map.Monsters[f].size*32)*Map.Monsters[f].health)/2), Map.Monsters[f].y - Map.Monsters[f].size *60, (Map.Monsters[f].size*32)*Map.Monsters[f].health,4);
+			}else {
+				context.fillRect(context.canvas.width*0.1, context.canvas.height*0.90, context.canvas.width*0.004*Map.Monsters[f].health,context.canvas.height*0.05);
+			}//draw healthbar down the bottom if it is a boss
 		
 	}
-			if(env.debug == 1){
+	if(env.debug == 1){
 			context.fillStyle = "#00ff00";							
 			context.beginPath();
 			context.arc(env.x+ (env.width/2),env.y + (env.height/2),env.radius,0,Math.PI*2,true)
 			context.fill();
 			}
 			
-			if (keypress.up){ 	
+	if (keypress.up){ 	
 				context.drawImage(img,462,838+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 0
 			}
-			else if (keypress.down){	
+	else if (keypress.down){	
 				context.drawImage(img,492,838+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 1
 			}
-			else if (keypress.left){	
+	else if (keypress.left){	
 				context.drawImage(img,522,837+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 2
 			}
-			else if (keypress.right){
+	else if (keypress.right){
 				context.drawImage(img,542,837+(36*Math.round(env.animframe)),21,36,env.x+3,env.y-15,env.width*0.9,env.height*1.6875)
 				keypress.lastdir = 3
 			}
-			else {
+	else {
 				var offset = 0
 				switch(keypress.lastdir){
 				case 0:
@@ -964,10 +1336,53 @@ monstertypes = {
 }
 
 
+bossprofiles = {
+	
+	demonLord:{
+		stats:{	
+		health:200,
+		speed:0.4,
+		timer:500,
+		timerc:0,
+		dmg:1,
+		size:4,
+		g:3
+		},
+		currentbehaviour:0,
+		dopassive:function(){
+			demonLord.currentbehaviour = 0
+			
+		},
+		doFireTrident:function(){
+			demonLord.currentbehaviour = 1
+
+		},
+		doFlameBreath:function(){
+			demonLord.currentbehaviour = 2
+
+		},
+		doFlameCharge:function(){
+			demonLord.currentbehaviour = 3
+
+		},
+		doDemonBurst:function(){
+			demonLord.currentbehaviour = 4
+
+		}
+	},
+	
+	lichKing:{
+		
+	}
+	
+}
+
+
 room_load = {
 	doors:[0,0,0,0],
 	denable:1,
 	next:[],
+	shoptemp:[999],
 	
 	foundroom:function(){
 		env.invuln = 0
@@ -1047,7 +1462,9 @@ room_load = {
 	
 	room_load.foundroom();
 	room_load.Monstergen();
+	if(World.rooms[env.curroom] != 2 && World.rooms[env.curroom] != 3 && World.rooms[env.curroom] !=1){
 	World.rooms[env.curroom] = 4
+	}
 		
 	},
 	
@@ -1070,30 +1487,181 @@ room_load = {
 				console.log("travelled")
 				return;
 			}
+			if (roomid == 1){
+				console.log("start room")
+				return;
+			}
 			if (roomid == 3){
 				console.log("Shop room")
 				gun.bullets.push({
 					x:context.canvas.width/2,
-					y:context.canvas.height/2,
+					y:(context.canvas.height/2)+50,
 					xv:0,
 					yv:0,
-					gun:"sniper",
-					u:4,
-					clip:5
-		})
+					u:6
+				})
+				gun.bullets.push({
+					x:context.canvas.width*0.25,
+					y:(context.canvas.height/2)+50,
+					xv:0,
+					yv:0,
+					u:6
+				})
+				gun.bullets.push({
+					x:context.canvas.width*0.75,
+					y:(context.canvas.height/2)+50,
+					xv:0,
+					yv:0,
+					u:6
+				})
+				if(room_load.shoptemp[0] == 999){
+					room_load.shoptemp[0] = Math.floor(World.gen()/Math.floor((10000/gun.guntypes.nguns)-1))
+					room_load.shoptemp[1] = Math.floor(World.gen()/3332)
+					room_load.shoptemp[2] = Math.floor(World.gen()/3332)
+				} //generates rng for what is in the shop so it is consistent, only applies for most recent shop
+				switch(room_load.shoptemp[0]){
+					case 0:
+						gun.bullets.push({
+						x:context.canvas.width*0.25,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"shotgun",
+						u:4,
+						cost:gun.guntypes.shotgun.shopprice,
+						clip:gun.guntypes.shotgun.cap
+					})
+					break;
+					case 1:
+						gun.bullets.push({
+						x:context.canvas.width*0.25,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"sniper",
+						u:4,
+						cost:gun.guntypes.sniper.shopprice,
+						clip:gun.guntypes.sniper.cap
+					})
+					break;
+					case 2:
+						gun.bullets.push({
+						x:context.canvas.width*0.25,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"pistol",
+						u:4,
+						cost:gun.guntypes.pistol.shopprice,
+						clip:gun.guntypes.pistol.cap
+					})
+					break;
+					case 3:
+						gun.bullets.push({
+						x:context.canvas.width*0.25,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"rocketLauncher",
+						u:4,
+						cost:gun.guntypes.rocketLauncher.shopprice,
+						clip:gun.guntypes.rocketLauncher.cap
+					})
+					break;
+					default:
+						gun.bullets.push({
+						x:context.canvas.width*0.25,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"pistol",
+						u:4,
+						cost:gun.guntypes.pistol.shopprice,
+						clip:gun.guntypes.pistol.cap
+					})
+						break;
+				} //chooses what gun item will show up based on shoptemp
+				switch(room_load.shoptemp[1]){
+					case 0:
+						gun.bullets.push({
+						x:context.canvas.width/2,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"rocketLauncher",
+						u:4,
+						cost:50,
+						clip:gun.guntypes.pistol.cap
+					})
+					break;
+					case 1:
+						gun.bullets.push({
+						x:context.canvas.width/2,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"rocketLauncher",
+						u:4,
+						cost:50,
+						clip:gun.guntypes.rocketLauncher.cap
+					})
+					break;
+					case 2:
+						gun.bullets.push({
+						x:context.canvas.width/2,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						gun:"rocketLauncher",
+						u:4,
+						cost:50,
+						clip:gun.guntypes.pistol.cap
+					})
+					break;
+				} //chooses what buff item will show up based on shoptemp
+				switch(room_load.shoptemp[2]){
+					case 0:
+						gun.bullets.push({
+						x:context.canvas.width*0.755,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						u:1,
+						cost:1,
+						heal:1,
+					})
+					break;
+					case 1:
+						gun.bullets.push({
+						x:context.canvas.width*0.755,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						u:1,
+						cost:1,
+						heal:1,
+					})
+					break;
+					case 2:
+						gun.bullets.push({
+						x:context.canvas.width*0.755,
+						y:context.canvas.height/2,
+						xv:0,
+						yv:0,
+						u:1,
+						cost:1,
+						heal:1,
+					})
+					break;
+				} //chooses what health item will show up
 				return;
 			}
 			if (roomid == 2){
 				console.log("boss room")
-				gun.bullets.push({
-					x:context.canvas.width/2,
-					y:context.canvas.height/2,
-					xv:0,
-					yv:0,
-					u:2
-				})
+				
 				return;
 			}
+			
 			var nmon = Math.ceil(roomid/2000)
 			for(n=0;n<nmon;n++){
 			roomid = room_load.gen(roomid)
@@ -1531,12 +2099,120 @@ exbar = function(){
 				env.gcd = gun.guntypes.shotgun.cd
 				env.cap = gun.guntypes.shotgun.cap
 			break;
+			case "rocketLauncher":
+				env.gcd = gun.guntypes.rocketLauncher.cd
+				env.cap = gun.guntypes.rocketLauncher.cap
+			break;
 			default:
 				env.gcd = gun.guntypes.pistol.cd
 				env.cap = gun.guntypes.pistol.cap
 			break;
 		}
 		
+			if(env.gcd < env.ccd && env.ammoclip >=1 && gun.reloadt == 0){
+				env.xvel -= xv*0.1
+				env.yvel -= yv*0.1
+				env.ammoclip-=1
+				env.ccd = 0
+				switch(env.gun){
+					case "pistol":
+						gun.bullets.push({
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
+							xv:xv,
+							yv:yv,
+							u:0,
+							m:gun.guntypes.pistol.damage
+						})
+						break;
+					case "sniper":
+							
+							gun.bullets.push({
+								x:env.x+(env.width/2),
+								y:env.y+(env.height/2),
+								xv:xv,
+								yv:yv,
+								u:0,
+								m:gun.guntypes.sniper.damage
+							})
+					break;
+					case "shotgun":
+						
+						//this is literally fucking impossible. go ask a maths advanced teacher or something in maths help bruuuuuh
+						
+					
+						
+					break;
+					case "flakCannon":
+						for(i=0;i<gun.guntypes.flakCannon.pellets;i++){
+						gun.bullets.push({
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
+							xv:xv*Math.sin(gun.guntypes.shotgun.ospa/i),
+							yv:yv*Math.sin(i/gun.guntypes.shotgun.ospa),
+							u:0,
+							sp:1
+						})
+						}
+					break;
+					case "rocketLauncher":
+						
+						gun.bullets.push({
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
+							xv:xv,
+							yv:yv,
+							u:0,
+							sp:1,
+							msp:Math.sqrt(Math.pow((mouse.x-env.x),2)+Math.pow((mouse.y-env.y),2))/5,
+							m:gun.guntypes.rocketLauncher.rocketDamage
+						})
+						
+					break;
+					default:
+						gun.bullets.push({
+							x:env.x+(env.width/2),
+							y:env.y+(env.height/2),
+							xv:xv,
+							yv:yv,
+							u:0
+						})
+					
+						
+			}
+				if (env.ammoclip == 0 && gun.reloadt != 1){
+				if(env.spare !=0){
+				gun.reload()
+				}
+					  }
+			}
+		
+	});
+	var firstframe = function(){
+		var xdiff = mouse.x-env.x-(env.width/2)
+		var ydiff = mouse.y-env.y-(env.height/2)
+		var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
+		var sf = gun.velocity/Length
+		var xv = xdiff*sf
+		var yv = ydiff*sf
+		switch(env.gun){
+			case "pistol":
+				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
+			break;
+			case "sniper":
+				env.gcd = gun.guntypes.sniper.cd
+				env.cap = gun.guntypes.sniper.cap
+			break;
+			case "shotgun":
+				env.gcd = gun.guntypes.shotgun.cd
+				env.cap = gun.guntypes.shotgun.cap
+			break;
+			default:
+				env.gcd = gun.guntypes.pistol.cd
+				env.cap = gun.guntypes.pistol.cap
+			break;
+		}
 			if(env.gcd < env.ccd && env.ammoclip >=1 && gun.reloadt == 0){
 				env.xvel -= xv*0.1
 				env.yvel -= yv*0.1
@@ -1621,11 +2297,8 @@ exbar = function(){
 			if(gun.reloadt == 1 && env.ammoclip > 0){
 				gun.reloadt = 0
 			}
-			
-			
-		
-	});
-
+	}
+	firstframe()
 	window.addEventListener("mousemove", function (e) {
 
 		mouse.x = e.clientX-404
