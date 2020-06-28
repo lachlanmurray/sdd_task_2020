@@ -1179,7 +1179,7 @@ render = function() {
 			}
 				if(Map.Monsters[f].g == 3){
 				if(Map.Monsters[f].timerc >= Map.Monsters[f].timer){
-					bossprofiles.demonLord.currentbehaviour = 4//Math.floor(World.gen()/Math.floor(9000/bossprofiles.demonLord.stats.nbehaviours))
+					bossprofiles.demonLord.currentbehaviour = Math.floor(World.gen()/Math.floor(9000/bossprofiles.demonLord.stats.nbehaviours))
 					var xdiff = (env.x-(env.width/2))-Map.Monsters[f].x
 					var ydiff = (env.y-(env.height/2))-Map.Monsters[f].y
 					var Length = Math.sqrt((xdiff*xdiff)+(ydiff*ydiff))
