@@ -2118,6 +2118,12 @@ exbar = function(){
 		case "sniper":
 			offset = 1
 		break;
+		case "rocketLauncher":
+			offset = 2
+		break;
+		case "shotgun":
+			offset = 3
+		break;
 		default:
 			offset = -1
 		break;
